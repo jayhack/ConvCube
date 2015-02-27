@@ -24,6 +24,7 @@ import cv2
 from ModalDB import ModalClient, Video, Frame
 
 from schema import convcube_schema
+from preprocess import ResizeT
 
 if __name__ == '__main__':
 
@@ -47,6 +48,7 @@ if __name__ == '__main__':
 
 		#####[ GRAB IMAGE FROM WEBCAM	]#####
 		ret, image = cap.read()
+		image = ResizeT().transform(image)
 		cv2.imshow('DISPLAY', image)
 
 		#####[ INSERT INTO DB	]#####
