@@ -51,7 +51,9 @@ if __name__ == '__main__':
 		frame_name = 'frame_' + str(i)
 		frame = client.insert(Frame, frame_name, {}, parent=video, method='mv')
 		frame['image'] = image
+		i += 1
 
+		#####[ BREAK ON ESCAPE	]#####
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
 
