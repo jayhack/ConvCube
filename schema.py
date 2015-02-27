@@ -16,6 +16,7 @@ jhack@stanford.edu
 ##################
 """
 import cPickle
+import pickle
 import numpy as np
 import scipy as sp
 import cv2
@@ -32,6 +33,24 @@ convcube_schema = {
 						'load_func':lambda p: cv2.imread(p),
 						'save_func':lambda x, p: cv2.imwrite(p, x)
 					},
+		'preprocessed':{
+						'mode':'disk',
+						'filename':'preprocessed.jpg',
+						'load_func':lambda p: cv2.imread(p),
+						'save_func':lambda x, p:cv2.imwrite(p, x)
+						},
+		'interior_points': {
+						'mode':'disk',
+						'filename':'interior_points.pkl',
+						'load_func': lambda p: pickle.load(open(p)),
+						'save_func': lambda x, p: pickle.dump(x, open(p, 'w'))
+						},
+		'exterior_points':{
+						'mode':'disk',
+						'filename':'exterior_points.pkl',
+						'load_func': lambda p: pickle.load(open(p)),
+						'save_func': lambda x, p: pickle.dump(x,open(p, 'w'))
+						}
 	},
 
 	Video: {
