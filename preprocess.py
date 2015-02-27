@@ -66,7 +66,26 @@ class InterestingPointsT(object):
 		return [tuple(p) for p in p0]
 
 
-class SurfDescriptorT(object):
+class Image2SURFPointsT(object):
+	"""
+	Transform: Image2SURFPointsT
+	----------------------------
+	image -> list of surf descriptor points 
+	"""
+	def __init__(self):
+		self.surf = cv2.SURF(400)
+
+	def fit(self, data):
+		pass
+
+	def transform(self, data):
+		image = data
+		kp = self.surf.detect(data)
+		return [(int(p.pt[0]), int(p.pt[1])) for p in kp]
+
+
+
+class Points2SURFT(object):
 	"""
 	Transform: SuftDetectorT
 	------------------------

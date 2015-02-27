@@ -29,6 +29,45 @@ from schema import convcube_schema
 from preprocess import ResizeT
 from preprocess import HarrisCornersT
 from preprocess import InterestingPointsT
+from preprocess import Image2SURFPointsT
+
+
+def find_interesting_points(image):
+	"""interesting points to track"""
+	ip = InterestingPointsT()
+	return ip.transform(image)
+
+
+def find_surf_points(image):
+	"""SURF points"""
+	sp = Image2SURFPointsT()
+	kp = sp.transform(image)
+	print kp
+	return kp
+
+
+@label_func(valid_types=[type(None), str])
+def mark_interior_exterior(event, label):
+	"""None -> 'interior' -> 'exterior' -> None"""
+	if label is None:
+		return 'interior'
+	elif label is 'interior':
+		return 'exterior'
+	elif label is 'exterior':
+		return None
+	else:
+		raise TypeError("Not recognized label: %s" % str(label))
+
+
+@draw_func(valid_types=tuple, color_map={ 	'interior':(255, 0, 0), #blue
+											'exterior':(0, 255, 0), #green
+											None:(0, 0, 255)  		#red
+										})
+def draw_rubiks_points(disp_image, obj, color, radius=3, thickness=1):
+	"""three colors for interior, exterior, nothing"""
+	cv2.circle(disp_image, obj, radius, color=color, thickness=thickness)
+
+
 
 if __name__ == '__main__':
 
@@ -36,31 +75,6 @@ if __name__ == '__main__':
 	client = ModalClient('./data/db', schema=convcube_schema)
 
 	#=====[ Step 2: boot up a labeler	]=====
-	def find_interesting_points(image):
-		"""interesting points to track"""
-		ip = InterestingPointsT()
-		return ip.transform(image)
-
-	@label_func(valid_types=[type(None), str])
-	def mark_interior_exterior(event, label):
-		"""None -> 'interior' -> 'exterior' -> None"""
-		if label is None:
-			return 'interior'
-		elif label is 'interior':
-			return 'exterior'
-		elif label is 'exterior':
-			return None
-		else:
-			raise TypeError("Not recognized label: %s" % str(label))
-
-	@draw_func(valid_types=tuple, color_map={ 	'interior':(255, 0, 0), #blue
-												'exterior':(0, 255, 0), #green
-												None:(0, 0, 255)  		#red
-											})
-	def draw_rubiks_points(disp_image, obj, color, radius=3, thickness=1):
-		"""three colors for interior, """
-		cv2.circle(disp_image, obj, radius, color=color, thickness=thickness)
-
 	labeler = CVLabeler(	find_interesting_points, 
 							draw_rubiks_points, 
 							euclidean_distance, 
@@ -78,17 +92,14 @@ if __name__ == '__main__':
 	for frame in video.iter_children(Frame):
 
 		#=====[ Get and store data	]=====
-		try:
-			image = frame['image'].copy()
-			image = ResizeT().transform(image)
-			points, labels = labeler.label(image)
-			interior_points = [p for p,l in zip(points,labels) if l == 'interior']
-			exterior_points = [p for p,l in zip(points,labels) if l == 'exterior']
-			frame['preprocessed'] = image
-			frame['interior_points'] = interior_points
-			frame['exterior_points'] = exterior_points
-		except:
-			continue
+		image = frame['image'].copy()
+		points, labels = labeler.label(image)
+		interior_points = [p for p,l in zip(points,labels) if l == 'interior']
+		exterior_points = [p for p,l in zip(points,labels) if l == 'exterior']
+		frame['interior_points'] = interior_points
+		frame['exterior_points'] = exterior_points
+		# except:
+		# 	continue
 
 
 
