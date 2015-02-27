@@ -35,7 +35,9 @@ if __name__ == '__main__':
 	cv2.namedWindow('DISPLAY')
 
 	#=====[ Step 3: create video name	]=====
-	video_name = 'video_' + str(time.time()).split('.')[0]
+	video_name = raw_input('Name this video? [N] ')
+	if video_name == '':
+		video_name = 'video_' + str(time.time()).split('.')[0]
 	video = client.insert(Video, video_name, {})
 	print 'Video name: %s' % video_name
 
