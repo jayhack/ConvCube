@@ -98,8 +98,6 @@ if __name__ == '__main__':
 		exterior_points = [p for p,l in zip(points,labels) if l == 'exterior']
 		frame['interior_points'] = interior_points
 		frame['exterior_points'] = exterior_points
-		# except:
-		# 	continue
 
 
 
