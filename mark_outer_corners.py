@@ -68,13 +68,13 @@ if __name__ == '__main__':
 
 
 	#=====[ Step 3: Get video	]=====
-	# video_name = raw_input('Name of video to mark: ')
-	video_name = 'jay_test_3'
+	video_name = raw_input('Name of video to mark: ')
 	print 'Video name: %s' % video_name
 	video = client.get(Video, video_name)
 
 	#=====[ Step 3: iterate through frames	]=====
 	cv2.namedWindow('DISPLAY')
+	ints, exts = [], []
 	for frame in video.iter_children(Frame):
 
 		#=====[ Get and store data	]=====
@@ -84,16 +84,11 @@ if __name__ == '__main__':
 			points, labels = labeler.label(image)
 			interior_points = [p for p,l in zip(points,labels) if l == 'interior']
 			exterior_points = [p for p,l in zip(points,labels) if l == 'exterior']
-			print interior_points
-			print exterior_points
 			frame['preprocessed'] = image
 			frame['interior_points'] = interior_points
 			frame['exterior_points'] = exterior_points
 		except:
 			continue
-
-
-	
 
 
 
