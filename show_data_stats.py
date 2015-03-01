@@ -31,7 +31,6 @@ if __name__ == '__main__':
 	#=====[ Step 1: boot up	ModalClient ]=====
 	client = ModalClient('./data/db', schema=convcube_schema)
 
-
 	#=====[ Step 3: iterate through frames	]=====
 	ints, exts = [], []
 	for video in client.iter(Video):
