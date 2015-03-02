@@ -1,0 +1,1 @@
+export DYLD_FALLBACK_LIBRARY_PATH='/Users/jayhack/anaconda/lib'
