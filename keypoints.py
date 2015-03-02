@@ -28,6 +28,9 @@ def harris_corners(gray):
 
 def interesting_points(gray):
 	"""gray image -> interesting points as list of tuples"""
+	if not len(gray.shape) == 2:
+		gray = grayscale(gray)
+	
 	feature_params = {
 						'maxCorners':1000,
 						'qualityLevel':0.01,

@@ -17,4 +17,4 @@ def grayscale(image):
 
 def resize_grayscale(image):
 	"""image -> smaller, grayscale image. idempotent."""
-	return grayscale(resize(image))
+	return resize(grayscale(image))

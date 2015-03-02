@@ -1,6 +1,6 @@
 """
-Script: mark_outer_corners.py
-=============================
+Script: label_data.py
+=====================
 
 Description:
 ------------
@@ -26,24 +26,8 @@ from ModalDB import ModalClient, Video, Frame
 from cvlabel import CVLabeler, euclidean_distance, draw_func, label_func
 
 from schema import convcube_schema
-from preprocess import ResizeT
-from preprocess import HarrisCornersT
-from preprocess import InterestingPointsT
-from preprocess import Image2SURFPointsT
-
-
-def find_interesting_points(image):
-	"""interesting points to track"""
-	ip = InterestingPointsT()
-	return ip.transform(image)
-
-
-def find_surf_points(image):
-	"""SURF points"""
-	sp = Image2SURFPointsT()
-	kp = sp.transform(image)
-	print kp
-	return kp
+from preprocess import resize, grayscale, resize_grayscale
+from keypoints import interesting_points
 
 
 @label_func(valid_types=[type(None), str])
@@ -75,7 +59,7 @@ if __name__ == '__main__':
 	client = ModalClient('./data/db', schema=convcube_schema)
 
 	#=====[ Step 2: boot up a labeler	]=====
-	labeler = CVLabeler(	find_interesting_points, 
+	labeler = CVLabeler(	interesting_points, 
 							draw_rubiks_points, 
 							euclidean_distance, 
 							mark_interior_exterior)
