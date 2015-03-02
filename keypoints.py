@@ -18,19 +18,18 @@ def array_to_tuples(array):
 	return [tuple(p) for p in array[:, 0, :]]
 
 
-def harris_corners(gray):
-	"""gray image -> harris corners as a list of tuples"""
-	dst = cv2.cornerHarris(gray, 7, 5, 0.04)
+def harris_corners(image):
+	"""(grayscale) image -> harris corners as a list of tuples"""
+	image = grayscale(image)
+	dst = cv2.cornerHarris(image, 7, 5, 0.04)
 	corners_img = (dst>0.01*dst.max())
 	ys, xs = np.nonzero(corners_img)
 	return zip(xs, ys)
 
 
-def interesting_points(gray):
-	"""gray image -> interesting points as list of tuples"""
-	if not len(gray.shape) == 2:
-		gray = grayscale(gray)
-	
+def interesting_points(image):
+	"""(grayscale) gray image -> interesting points as list of tuples"""
+	image = grayscale(image)
 	feature_params = {
 						'maxCorners':1000,
 						'qualityLevel':0.01,
@@ -42,14 +41,14 @@ def interesting_points(gray):
 
 
 def sift_points(gray):
-	"""gray image -> sift keypoints as a list of tuples"""
+	"""(grayscale) image -> sift keypoints as a list of tuples"""
 	sift = cv2.SIFT()
 	points = sift.detect(gray, mask=None)
 	return kpts_to_tuples(points)
 
 
 def sift_descriptors(image, tuples):
-	"""(image, points as tuples) -> np.array of SIFT descriptors"""
+	"""((grayscale) image, points as tuples) -> np.array of SIFT descriptors"""
 	gray = resize_grayscale(image)
 	sift = cv2.SIFT()
 	kp, desc = sift.compute(gray, tuples_to_kpts(tuples))
