@@ -6,7 +6,7 @@ from sklearn.svm import SVC
 from sklearn.cross_validation import cross_val_score
 
 from preprocess import resize, grayscale, resize_grayscale
-from image_points import interesting_points, sift_descriptors
+from keypoints import interesting_points, sift_descriptors
 
 
 class Cv2Cube(object):
