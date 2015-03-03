@@ -43,7 +43,7 @@ def load_transfer_dataset(client, train=0.75):
 				y.append(output)
 
 	#=====[ Step 3: to numpy arrays ]=====
-	X = np.array(X)
+	X = put_channels_first(np.array(X))
 	y = np.array(y)
 
 	#=====[ Step 4: shuffle	]=====
@@ -55,9 +55,9 @@ def load_transfer_dataset(client, train=0.75):
 	n = X.shape[0]
 	split_ix = int(n*train)
 	X_train = X[:split_ix,:,:,:]
-	y_train = X[:split_ix,:,:,:]
+	y_train = y[:split_ix,]
 	X_val = X[split_ix:,:,:,:]
-	y_val = X[split_ix:,:,:,:]
+	y_val = y[split_ix:,:]
 
 	return X_train, y_train, X_val, y_val
 

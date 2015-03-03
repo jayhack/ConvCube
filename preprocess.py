@@ -11,8 +11,8 @@ def resize(image, shape=(360, 640)):
 
 
 def imagenet_resize(image):
-	"""image -> (45,80,3) shaped-image"""
-	return resize(image, (45,80))
+	"""image -> (46,80,3) shaped-image (46 for even height)"""
+	return resize(image, (46,80)) 
 
 
 def grayscale(image):

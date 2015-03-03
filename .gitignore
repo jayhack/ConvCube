@@ -2,6 +2,7 @@
 *.npy
 *.pkl
 *~
+*.pyc
 
 #=====[ data ]=====
 data/db/*
