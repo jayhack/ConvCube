@@ -16,9 +16,8 @@ def make_output_coords(kpts):
 
         (mean of the keypoints)
     """
-    kpts = np.array(kpts)
+    kpts = np.array(kpts) / 8.0
     return np.mean(kpts, axis=0)
-
 
 
 def make_output_heatmap(image, kpts):

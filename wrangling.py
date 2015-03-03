@@ -1,4 +1,5 @@
 import pickle
+import random
 import numpy as np
 from ModalDB import ModalClient, Video, Frame
 from preprocess import imagenet_resize
@@ -16,7 +17,7 @@ def has_label(frame):
 		return len(frame['interior_points']) > 0
 
 
-def load_transfer_dataset(client):
+def load_transfer_dataset(client, train=0.75):
 	"""
 	TODO: should this iterate? downsample?
 
@@ -41,10 +42,22 @@ def load_transfer_dataset(client):
 				output = make_output_coords(kpts)
 				y.append(output)
 
-
-	#=====[ Step 3: to numpy arrays	]=====
+	#=====[ Step 3: to numpy arrays ]=====
 	X = np.array(X)
-	X = put_channels_first(X)
 	y = np.array(y)
-	return X, y
+
+	#=====[ Step 4: shuffle	]=====
+	shuffle_ix = np.random.permutation(range(X.shape[0]))
+	X = X[shuffle_ix,:,:,:].copy()
+	y = y[shuffle_ix,:].copy()
+
+	#=====[ Step 5: test and validation	]=====
+	n = X.shape[0]
+	split_ix = int(n*train)
+	X_train = X[:split_ix,:,:,:]
+	y_train = X[:split_ix,:,:,:]
+	X_val = X[split_ix:,:,:,:]
+	y_val = X[split_ix:,:,:,:]
+
+	return X_train, y_train, X_val, y_val
 
