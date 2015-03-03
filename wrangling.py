@@ -1,6 +1,8 @@
 import pickle
+import numpy as np
 from ModalDB import ModalClient, Video, Frame
-from cs231n.data_utils import load_tiny_imagenet
+from preprocess import imagenet_resize
+from ML import make_output_heatmap, make_output_coords
 
 
 def put_channels_first(X):
@@ -8,7 +10,13 @@ def put_channels_first(X):
 	return X.transpose(0, 3, 1, 2).copy()
 
 
-def load_transfer_dataset(client, X):
+def has_label(frame):
+	"""ModalDB.Frame -> has label or not"""
+	if not frame['interior_points'] is None:
+		return len(frame['interior_points']) > 0
+
+
+def load_transfer_dataset(client):
 	"""
 	TODO: should this iterate? downsample?
 
@@ -17,9 +25,26 @@ def load_transfer_dataset(client, X):
 
 	client: ModalDB client
 	"""
+	X, y = [], []
 
 	for video in client.iter(Video):
 		for frame in video.iter_children(Frame):
-			image = frame['image']
+			if has_label(frame):
+		
+				#=====[ Step 1: format image	]=====
+				image = frame['image']
+				image = imagenet_resize(image)
+				X.append(image)
 
+				#=====[ Step 2: get label	]=====
+				kpts = frame['interior_points']
+				output = make_output_coords(kpts)
+				y.append(output)
+
+
+	#=====[ Step 3: to numpy arrays	]=====
+	X = np.array(X)
+	X = put_channels_first(X)
+	y = np.array(y)
+	return X, y
 
