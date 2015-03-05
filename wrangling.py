@@ -90,7 +90,7 @@ def load_dataset_localization(client, train=0.75):
 		X_, y_ = get_convnet_inputs_localization(frame)
 		X.append(X_)
 		y.append(y_)
-	X, y = np.array(X), np.array(y)
+	X, y = np.vstack(X), np.vstack(y)
 	return train_test_split(X, y, )
 
 
