@@ -8,7 +8,10 @@
 data/db/*
 
 #=====[ cs231n ]=====
-convcube/cs231n/*
+convcube/cs231n/build
+convcube/cs231n/*.c
+convcube/cs231n/datasets/*
+!convcube/cs231n/datasets/*.sh
 
 #=====[ Build ]=====
 build
