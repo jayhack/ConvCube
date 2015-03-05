@@ -1,7 +1,9 @@
 import numpy as np
 import cv2
+from convnet.cv.keypoints import kpts_to_tuples
+from convnet.cv.keypoints import array_to_tuples
 
-def draw_points(self, frame, points, labels=None):
+def draw_points(frame, points, labels=None):
 	"""
 		Description:
 		------------
@@ -28,7 +30,6 @@ def draw_points(self, frame, points, labels=None):
 	if not all([type(l) == int for l in labels]):
 		raise TypeError("Didn't understand labels")
 
-	#=====[ Step 2: points to list of tuples	]=====
 	if type(points) == tuple:
 		points = [points]
 	if not len(points) == len(labels):
@@ -45,6 +46,6 @@ def draw_points(self, frame, points, labels=None):
 	#=====[ Step 4: draw circles around points	]=====
 	disp_img = frame.copy()
 	for p, l in zip(points, labels):
-		cv2.circle(disp_img, p, lmap[l]['radius'], color=lmap[l]['color'], thickness=lmap[l][color])
+		cv2.circle(disp_img, (int(p[0]), int(p[1])), lmap[l]['radius'], color=lmap[l]['color'], thickness=lmap[l]['color'])
 
 	return disp_img

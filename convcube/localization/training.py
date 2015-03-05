@@ -94,8 +94,13 @@ class LocalizationConvNetTrainer(object):
         X_batch = augment_fn(X_batch)
 
       #=====[ EVALUATE COST AND GRADIENT ]=====
+      predictions = loss_function(X_batch, model, reg=reg, dropout=dropout)
+      loss = np.mean(np.sum((predictions - y_batch)**2, axis=1)) / 2
       cost, grads = loss_function(X_batch, model, y_batch, reg=reg, dropout=dropout)
       loss_history.append(cost)
+
+      # if cost < 0.1:
+        # print predictions -  y_batch
 
       #=====[ PARAMETER UPDATE ]=====
       for p in model:

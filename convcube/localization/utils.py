@@ -24,8 +24,8 @@ def get_y_localization(kpts):
 		TODO: change output to (center, size)
 	"""
 	kpts = np.array(kpts).astype(np.float32)
-	kpts[0] /= 360.0
-	kpts[1] /= 640.0 
+	kpts[:, 0] /= 640.0
+	kpts[:, 1] /= 360.0
 	return np.mean(np.array(kpts), axis=0)
 
 

@@ -10,11 +10,11 @@ from training import LocalizationConvNetTrainer
 from utils import *
 
 
-class LocalizationConvNet(object):
+class HeatMapConvNet(object):
 	"""
 	Class: LocalizationConvNet
 	--------------------------
-	ConvNet for finding the locale of the Cube 
+	ConvNet for generating a heatmap of likely corner locations
 
 	Args:
 	-----
@@ -109,7 +109,7 @@ class LocalizationConvNet(object):
 	####################[ Localization ]############################################
 	################################################################################
 
-	def init_localization_convnet(self, pretrained_model):
+	def init_heatmap_convnet(self, pretrained_model):
 		"""
 		Initialize a three layer ConvNet with the following architecture:
 
@@ -164,7 +164,7 @@ class LocalizationConvNet(object):
 
 		#=====[ Step 1: Loss ]=====
 		diffs = y_pred - y
-		loss = np.mean(np.sqrt(np.sum(diffs**2, axis=1))) / 2
+		loss = np.mean(np.sum(diffs**2, axis=1)) / 2
 
 		#=====[ Step 2: Gradients ]=====
 		grads = diffs
@@ -255,7 +255,7 @@ class LocalizationConvNet(object):
 																		X_train, y_train, 
 																		X_val, y_val, 
 																		loc_model, self.localization_convnet, 
-																		dropout=None, reg=0.00, 
+																		dropout=None, reg=0.05, 
 																		learning_rate=0.00005, 
 																		batch_size=50, num_epochs=100,
 																		learning_rate_decay=1.0, 

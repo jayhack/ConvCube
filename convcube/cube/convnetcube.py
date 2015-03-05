@@ -41,6 +41,11 @@ class ConvNetCube(Cube):
 
 	def draw_output(self, image):
 		"""frame -> disp_image with output drawn on it"""
+		#=====[ Step 1: get localization	]=====
 		coords = self.localize(image)
+
+		#=====[ Step 2: scale coords	]=====
+		coords[0] *= image.shape[0]
+		coords[1] *= image.shape[1]
 		disp_img = draw_points(image, coords, labels=[1])
 		return disp_img
