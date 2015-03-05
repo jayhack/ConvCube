@@ -1,45 +1,15 @@
-import numpy as np 
+import numpy as np
 import scipy as sp
 import cv2
-
-
-class Cube(object):
-	"""
-	Class: Cube
-	-----------
-	Abstract class for CV on rubiks cube.
-	"""
-	def __init__(self):
-		pass
-
-	def load(self, path):
-		"""loads classifiers"""
-		raise NotImplementedError
-
-	def save(self, path):
-		"""saves consumed data"""
-		raise NotImplementedError
-
-	def update(self, frame):
-		"""updates current state"""
-		raise NotImplementedError
-
-	def draw(self, frame):
-		"""draws current state on frame"""
-		raise NotImplementedError
-
-
-
-
-
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 from sklearn.cross_validation import cross_val_score
-from preprocess import resize_grayscale
-from keypoints import interesting_points
-from keypoints import sift_descriptors
+from cube import Cube
+from convcube.cv.preprocess import resize_grayscale
+from convcube.cv.keypoints import interesting_points
+from convcuve.cv.keypoints import sift_descriptors
 
-class Cv2Cube(object):
+class Cv2Cube(Cube):
 	"""
 	Class: Cv2Cube
 	--------------
@@ -49,8 +19,6 @@ class Cv2Cube(object):
 	def __init__(self, classifier=None):
 		super(Cv2Cube, self).__init__()
 		self.clf = classifier
-
-
 
 
 	################################################################################
@@ -131,79 +99,4 @@ class Cv2Cube(object):
 	def update(self, image):
 		""" """
 		raise NotImplementedError
-
-
-
-
-class Cube(object):
-	"""
-	Class: Cube
-	-----------
-	Abstract class for CV on rubiks cube.
-	"""
-	def __init__(self):
-		pass
-
-	def load(self, path):
-		"""loads classifiers"""
-		raise NotImplementedError
-
-	def save(self, path):
-		"""saves consumed data"""
-		raise NotImplementedError
-
-	def update(self, frame):
-		"""updates current state"""
-		raise NotImplementedError
-
-	def draw(self, frame):
-		"""draws current state on frame"""
-		raise NotImplementedError
-
-
-
-
-from localization import get_X_localization
-from localization import localization_convnet
-from drawing import draw_points
-
-class ConvNetCube(Cube):
-	"""
-	Class: ConvNetCube
-	------------------
-	Uses primarily cv2 and scipy in order to find, track and 
-	interpret the cube 
-
-	Args:
-	-----
-	- loc_convnet: convnet trained for localization. That is, image ->
-	  approximate coordinates of rubiks cube in image.
-	  TODO: also find scale!
-	"""
-	def __init__(self, loc_convnet=None):
-		super(ConvNetCube, self).__init__()
-		self.loc_convnet = loc_convnet
-
-
-	################################################################################
-	####################[ CovNet: Localization ]####################################
-	################################################################################
-
-	def localize(self, image):
-		"""frame -> coordinates of cube as tuple"""
-		X = image2localization_input(frame)
-		coords = localization_convnet(self.loc_convnet, X)
-
-
-
-	################################################################################
-	####################[ Online ]##################################################
-	################################################################################
-
-	def draw_output(self, frame):
-		"""frame -> disp_image with output drawn on it"""
-		coords = self.localize(frame)
-		disp_img = draw_points(frame, coords, labels=[1])
-		return disp_img
-
 

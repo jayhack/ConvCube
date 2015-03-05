@@ -22,6 +22,7 @@ def FoveatedRetina(object):
 		- layer_sizes: spans of layers in original image pixels
 		- layer_resolutions: resolutions of each layer
 		"""
+		raise NotImplementedError
 		self.num_layers = num_layers
 		self.layer_sizes = layer_sizes
 		self.centers = [(0,0) for l in layer_sizes]
