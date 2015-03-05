@@ -23,5 +23,12 @@ def iter_unlabeled_frames(client):
 			yield frame
 
 
+def get_random_labeled_frame(client):
+	"""returns random frame"""
+	return client.get_random(Frame)
+
+
+
+
 
 
