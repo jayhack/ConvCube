@@ -62,7 +62,6 @@ class ClassifierTrainer(object):
 
     N = X.shape[0]
 
-    #=====[ Step 1: setup ]=====
     if sample_batches:
       iterations_per_epoch = N / batch_size # using SGD
     else:
@@ -74,12 +73,10 @@ class ClassifierTrainer(object):
     loss_history = []
     train_acc_history = []
     val_acc_history = []
-
-    #==========[ ITERATIONS ]==========
     for it in xrange(num_iters):
       if it % 10 == 0:  print 'starting iteration ', it
 
-      #=====[ Get batch of data ]=====
+      # get batch of data
       if sample_batches:
         batch_mask = np.random.choice(N, batch_size)
         X_batch = X[batch_mask]
@@ -89,16 +86,15 @@ class ClassifierTrainer(object):
         X_batch = X
         y_batch = y
 
-
-      #=====[ PERFORM DATA AUGMENTATION ]=====
+      # Maybe perform data augmentation
       if augment_fn is not None:
         X_batch = augment_fn(X_batch)
 
-      #=====[ EVALUATE COST AND GRADIENT ]=====
+      # evaluate cost and gradient
       cost, grads = loss_function(X_batch, model, y_batch, reg=reg, dropout=dropout)
       loss_history.append(cost)
 
-      #=====[ PARAMETER UPDATE ]=====
+      # perform a parameter update
       for p in model:
         # compute the parameter step
         if update == 'sgd':
@@ -122,9 +118,7 @@ class ClassifierTrainer(object):
         # update the parameters
         model[p] += dx
 
-
-
-      #=====[ EVALUATION ON VALIDATION SET ]=====
+      # every epoch perform an evaluation on the validation set
       first_it = (it == 0)
       epoch_end = (it + 1) % iterations_per_epoch == 0
       acc_check = (acc_frequency is not None and it % acc_frequency == 0)
@@ -142,39 +136,29 @@ class ClassifierTrainer(object):
         else:
           X_train_subset = X
           y_train_subset = y
-
-        #=====[ FORWARD PASS ON TRAINING SET]=====
         # Computing a forward pass with a batch size of 1000 will is no good,
         # so we batch it
         y_pred_train = []
-        train_acc = []
-        for i in xrange(X_train_subset.shape[0] / 10):
-          X_train_slice = X_train_subset[i*10:(i+1)*10]
+        for i in xrange(X_train_subset.shape[0] / 100):
+          X_train_slice = X_train_subset[i*100:(i+1)*100]
           if predict_fn is not None:
             X_train_slice = predict_fn(X_train_slice)
-          
-          scores = loss_function(X_train_slice, model) #(batch_size x 2) array of predicted coordinates
-          y_pred_train.append(scores)
-
-        y_pred_train = np.vstack(y_pred_train)
-        diffs = y_pred_train - y_train_subset[:y_pred_train.shape[0]]
-        train_acc = float(np.mean(np.sum(diffs**2, axis=1)))
+          scores = loss_function(X_train_slice, model)
+          y_pred_train.append(np.argmax(scores, axis=1))
+        y_pred_train = np.hstack(y_pred_train)
+        train_acc = np.mean(y_pred_train == y_train_subset)
         train_acc_history.append(train_acc)
 
-        #=====[ FORWARD PASS ON VALIDATION SET ]=====
         # evaluate val accuracy, but split the validation set into batches
         y_pred_val = []
-        for i in xrange(X_val.shape[0] / 10):
-          X_val_slice = X_val[i*10:(i+1)*10]
+        for i in xrange(X_val.shape[0] / 100):
+          X_val_slice = X_val[i*100:(i+1)*100]
           if predict_fn is not None:
             X_val_slice = predict_fn(X_val_slice)
-
           scores = loss_function(X_val_slice, model)
-          y_pred_val.append(scores)
-
-        y_pred_val = np.vstack(y_pred_val)
-        diffs = y_pred_val - y_val[:y_pred_val.shape[0]]
-        val_acc = float(np.mean(np.sum(diffs**2, axis=1)))
+          y_pred_val.append(np.argmax(scores, axis=1))
+        y_pred_val = np.hstack(y_pred_val)
+        val_acc = np.mean(y_pred_val ==  y_val)
         val_acc_history.append(val_acc)
         
         # keep track of the best model based on validation accuracy

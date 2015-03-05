@@ -3,6 +3,7 @@ import scipy as sp
 from convcube.cs231n.classifiers.convnet import init_three_layer_convnet
 from convcube.cs231n.classifiers.convnet import three_layer_convnet
 from convcube.cs231n.classifier_trainer import ClassifierTrainer
+from training import LocalizationConvNetTrainer
 from utils import *
 
 
@@ -41,9 +42,9 @@ class LocalizationConvNet(object):
 						bias_scale=0,
 						dtype=np.float32
 				):
-		self.pre_shape = pre_shape
-		self.loc_shape = loc_shape
-		self.pre_classes = pre_classes
+		self.shape_pre = shape_pre
+		self.shape_loc = shape_loc
+		self.classes_pre = classes_pre
 		self.filter_size = filter_size
 		self.num_filters_pre = num_filters_pre
 		self.num_filters_loc = num_filters_loc
@@ -91,7 +92,7 @@ class LocalizationConvNet(object):
 		 						X_train, y_train, 
 		 						X_val, y_val, 
 		 						model, 
-	 							cs231n_convnet.three_layer_convnet, 
+	 							three_layer_convnet, 
 		 						dropout=None, reg=0.05, learning_rate=0.00005, 
 		 						batch_size=50, num_epochs=8,
 								learning_rate_decay=1.0, update='rmsprop', verbose=verbose
@@ -236,3 +237,40 @@ class LocalizationConvNet(object):
 		loss = data_loss + reg_loss
 
 		return loss, grads
+
+
+
+	def train_localization_convnet(self, X_train, y_train, X_val, y_val, model):
+		"""
+			trains localization convnet. 
+
+			returns model, loss_hist, train_acc_hist, val_acc_hist
+		"""
+		trainer = LocalizationConvNetTrainer()
+		model, loss_hist, train_acc_hist, val_acc_hist = trainer.train(
+																		X_train, y_train, 
+																		X_val, y_val, 
+																		model, localization_convnet, 
+																		dropout=None, reg=0.05, 
+																		learning_rate=0.00005, 
+																		batch_size=50, num_epochs=100,
+																		learning_rate_decay=1.0, 
+																		update='rmsprop', verbose=True
+																	)
+		return model, loss_hist, train_acc_hist, val_acc_hist
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
