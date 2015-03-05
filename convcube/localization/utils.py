@@ -8,7 +8,7 @@ from convcube.utils.wrangling import iter_labeled_frames
 def localization_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
 	if not image.shape[:2] == (46, 80):
-		image = resize(image, (46,80)) 
+		image = resize(image, (46, 80))
 	return image
 
 
@@ -20,8 +20,12 @@ def get_X_localization(image):
 def get_y_localization(kpts):
 	"""list of interior corners as tuples -> center of cube
 
+		TODO: y_localization to portion across screen
 		TODO: change output to (center, size)
 	"""
+	kpts = np.array(kpts).astype(np.float32)
+	kpts[0] /= 360.0
+	kpts[1] /= 640.0 
 	return np.mean(np.array(kpts), axis=0)
 
 
