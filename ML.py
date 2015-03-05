@@ -4,15 +4,6 @@ from cs231n.layers import *
 from cs231n.fast_layers import *
 from cs231n.layer_utils import *
 
-def construct_kpts_label_image(image, kpts):
-    """(image, keypoints) -> image containing corners"""
-    kpts = np.array(kpts).astype(np.uint16)
-    label_image = np.zeros((image.shape[0], image.shape[1]))
-    label_image[kpts[:,1], kpts[:,0]] = 1
-    label_image = cv2.GaussianBlur(label_image, (5,5), 2)
-    return label_image
-
-
 def make_output_coords(kpts):
     """(image, kpts) -> output of center of cube
         should be paired with a linear top layer
@@ -32,81 +23,82 @@ def make_output_heatmap(image, kpts):
     return label_image
 
 
-def init_transfer_convnet_coords(     pretrained_model,
-                                      input_shape=(3, 32, 32), 
-                                      filter_size=5, 
-                                      num_filters=(32, 128), 
-                                      weight_scale=1e-2, 
-                                      bias_scale=0, 
-                                      dtype=np.float32):
-  """
-  Initialize a three layer ConvNet with the following architecture:
+def get_convnet_inputs(frame):
+  """ModalDB.Frame -> (downsized image, corner heatmap, coords)"""
+  raise NotImplementedError
+  
 
-  conv - relu - pool - affine - relu - dropout - affine
+def init_transfer_convnet(  pretrained_model,
+                            input_shape=(3, 46, 80), 
+                            filter_size=5, 
+                            num_filters=(16, 32),
+                            weight_scale=1e-2, 
+                            bias_scale=0, 
+                            dtype=np.float32):
+    """
+    Initialize a three layer ConvNet with the following architecture:
 
-  the last affine layer goes to size 2
+    conv - relu - pool - affine - relu - dropout - affine - softmax
 
-  The convolutional layer uses stride 1 and has padding to perform "same"
-  convolution, and the pooling layer is 2x2 stride 2.
+    The convolutional layer uses stride 1 and has padding to perform "same"
+    convolution, and the pooling layer is 2x2 stride 2.
 
-  Inputs:
-  - pretrained_model: conv-relu-pool-affine-relu-dropout-affine-softmax pretrained model 
-                        (see cs231n.classifiers.convnet.init_three_layer_net)
-  - input_shape: Tuple (C, H, W) giving the shape of each training sample.
+    Inputs:
+    - input_shape: Tuple (C, H, W) giving the shape of each training sample.
     Default is (3, 32, 32) for CIFAR-10.
-  - num_classes: Number of classes over which classification will be performed.
+    - num_classes: Number of classes over which classification will be performed.
     Default is 10 for CIFAR-10.
-  - filter_size: The height and width of filters in the convolutional layer.
-  - num_filters: Tuple (F, H) where F is the number of filters to use in the
+    - filter_size: The height and width of filters in the convolutional layer.
+    - num_filters: Tuple (F, H) where F is the number of filters to use in the
     convolutional layer and H is the number of neurons to use in the hidden
     affine layer.
-  - weight_scale: Weights are initialized from a gaussian distribution with
+    - weight_scale: Weights are initialized from a gaussian distribution with
     standard deviation equal to weight_scale.
-  - bias_scale: Biases are initialized from a gaussian distribution with
+    - bias_scale: Biases are initialized from a gaussian distribution with
     standard deviation equal to bias_scale.
-  - dtype: Numpy datatype used to store parameters. Default is float32 for
+    - dtype: Numpy datatype used to store parameters. Default is float32 for
     speed.
-  """
-  C, H, W = input_shape
-  F1, FC = num_filters
-  filter_size = 5
-  model = {}
-  model['W1'] = pretrained_model['W1']
-  model['b1'] = pretrained_model['b1']
-  model['W2'] = np.random.randn(H * W * F1 / 4, FC)
-  model['b2'] = np.random.randn(FC)
-  model['W3'] = np.random.randn(FC, 2)
-  model['b3'] = np.random.randn(2)
+    """
+    C, H, W = input_shape
+    F1, FC = num_filters
+    model = {}
+    model['W1'] = pretrained_model['W1']
+    model['b1'] = pretrained_model['b1']
+    model['W2'] = np.random.randn(H * W * F1 / 4, FC)
+    model['b2'] = np.random.randn(FC)
+    model['W3'] = np.random.randn(FC, 2)
+    model['b3'] = np.random.randn(2)
 
-  for i in [2, 3]:
-    model['W%d' % i] *= weight_scale
-    model['b%d' % i] *= bias_scale
+    for i in [2, 3]:
+        model['W%d' % i] *= weight_scale
+        model['b%d' % i] *= bias_scale
 
-  for k in model:
-    model[k] = model[k].astype(dtype, copy=False)
+    for k in model:
+        model[k] = model[k].astype(dtype, copy=False)
 
-  return model
+    return model
 
 
-def l2_loss(scores, coords):
-    """(scores, coords) -> data_loss, dscores"""
-    assert scores.shape == coords.shape
-
+def euclidean_loss(y_pred, y):
+    """return euclidean loss"""
+    assert y_pred.shape == y.shape
+    
     #=====[ Step 1: loss ]=====
-    loss = np.sum((scores - coords)**2, axis=1)
-    #=====[ Step 2: gradients ]=====
-    grads = 2*(scores - coords)
+    diffs = y_pred - y
+    loss = np.sum(np.sum(diffs**2, axis=1))
 
+    #=====[ Step 2: gradients ]=====
+    grads = 2 * diffs
     return loss, grads
 
 
 
-def transfer_convnet_coords(X, model, y=None, reg=0.0, dropout=None):
+def transfer_convnet(X, model, y=None, reg=0.0, dropout=None):
   """
   Compute the loss and gradient for a simple three layer ConvNet that uses
   the following architecture:
 
-  conv - relu - pool - affine - relu - dropout - affine - softmax
+  conv - relu - pool - affine - relu - dropout - affine - 
 
   The convolution layer uses stride 1 and sets the padding to achieve "same"
   convolutions, and the pooling layer is 2x2 stride 2. We use L2 regularization
@@ -144,9 +136,10 @@ def transfer_convnet_coords(X, model, y=None, reg=0.0, dropout=None):
     scores, cache4 = affine_forward(d2, W3, b3)
 
   if y is None:
+    #====[ this is just the euclidean coordinates... ]=====
     return scores
 
-  data_loss, dscores = l2_loss(scores, y)
+  data_loss, dscores = euclidean_loss(scores, y)
   if dropout is None:
     da2, dW3, db3 = affine_backward(dscores, cache4)
   else:
@@ -165,3 +158,4 @@ def transfer_convnet_coords(X, model, y=None, reg=0.0, dropout=None):
   loss = data_loss + reg_loss
 
   return loss, grads
+

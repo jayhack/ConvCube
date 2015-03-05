@@ -17,6 +17,13 @@ def has_label(frame):
 		return len(frame['interior_points']) > 0
 
 
+def iter_labeled_frames(client):
+	"""iterator over frames that have labels"""
+	for frame in client.iter(Frame):
+		if has_label(frame):
+			yield frame
+			
+
 def load_transfer_dataset(client, train=0.75):
 	"""
 	TODO: should this iterate? downsample?
