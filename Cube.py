@@ -1,21 +1,43 @@
 import numpy as np 
 import scipy as sp
 import cv2
+
+
+class Cube(object):
+	"""
+	Class: Cube
+	-----------
+	Abstract class for CV on rubiks cube.
+	"""
+	def __init__(self):
+		pass
+
+	def load(self, path):
+		"""loads classifiers"""
+		raise NotImplementedError
+
+	def save(self, path):
+		"""saves consumed data"""
+		raise NotImplementedError
+
+	def update(self, frame):
+		"""updates current state"""
+		raise NotImplementedError
+
+	def draw(self, frame):
+		"""draws current state on frame"""
+		raise NotImplementedError
+
+
+
+
+
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 from sklearn.cross_validation import cross_val_score
-
-from preprocess import resize
-from preprocess import grayscale
 from preprocess import resize_grayscale
-from preprocess import put_channels_first
-from preprocess import localization_resize
-from preprocess import make_convnet_input
 from keypoints import interesting_points
 from keypoints import sift_descriptors
-from ML import transfer_convnet
-from drawing import draw_points
-
 
 class Cv2Cube(object):
 	"""
@@ -140,6 +162,11 @@ class Cube(object):
 
 
 
+
+from localization import get_X_localization
+from localization import localization_convnet
+from drawing import draw_points
+
 class ConvNetCube(Cube):
 	"""
 	Class: ConvNetCube
@@ -162,15 +189,10 @@ class ConvNetCube(Cube):
 	####################[ CovNet: Localization ]####################################
 	################################################################################
 
-	def preprocess_convnet(self, frame):
-		"""frame -> input to convnet. idempotent"""
-		return make_convnet_input(frame)
-
-
-	def localize(self, frame):
+	def localize(self, image):
 		"""frame -> coordinates of cube as tuple"""
-		X = self.preprocess_convnet(frame)
-		coords = transfer_convnet(self.loc_convnet, X)
+		X = image2localization_input(frame)
+		coords = localization_convnet(self.loc_convnet, X)
 
 
 
