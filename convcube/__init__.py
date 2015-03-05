@@ -1,4 +1,7 @@
 __all__ = 	[
+				#=====[ schema	]=====
+				'convcube_schema'
+			
 				#=====[ cube	]=====
 				'ConvNetCube', 'CV2Cube',
 
@@ -6,6 +9,7 @@ __all__ = 	[
 				'LocalizationConvNet', 'load_dataset_localization'
 			]
 
+from schema import convcube_schema
 from cube import ConvNetCube
 from cube import CV2Cube
 from localization import LocalizationConvNet
