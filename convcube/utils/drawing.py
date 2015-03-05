@@ -18,7 +18,11 @@ def draw_points(frame, points, labels=None):
 					{1, True} 			=> green, bold
 					{2} 				=> blue, faint
 	"""
-	#=====[ Step 1: standardize labels to all integers	]=====
+	#=====[ Step 1: standardize points	]=====
+	if type(points) == tuple:
+		points = [points]
+
+	#=====[ Step 2: standardize labels 	]=====
 	if labels is None:
 		labels = [0 for p in points]
 	elif type(labels) == list:
@@ -30,8 +34,6 @@ def draw_points(frame, points, labels=None):
 	if not all([type(l) == int for l in labels]):
 		raise TypeError("Didn't understand labels")
 
-	if type(points) == tuple:
-		points = [points]
 	if not len(points) == len(labels):
 		raise TypeError("Must be same number of points and labels or no labels!")
 
@@ -46,6 +48,6 @@ def draw_points(frame, points, labels=None):
 	#=====[ Step 4: draw circles around points	]=====
 	disp_img = frame.copy()
 	for p, l in zip(points, labels):
-		cv2.circle(disp_img, (int(p[0]), int(p[1])), lmap[l]['radius'], color=lmap[l]['color'], thickness=lmap[l]['color'])
+		cv2.circle(disp_img, (int(p[0]), int(p[1])), lmap[l]['radius'], color=lmap[l]['color'], thickness=lmap[l]['thickness'])
 
 	return disp_img

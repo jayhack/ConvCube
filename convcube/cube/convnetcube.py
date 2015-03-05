@@ -18,9 +18,9 @@ class ConvNetCube(Cube):
 	  approximate coordinates of rubiks cube in image.
 	  TODO: also find scale!
 	"""
-	def __init__(self, loc_model=None):
+	def __init__(self, loc_convnet=None):
 		# super(ConvNetCube, self).__init__()
-		self.loc_model = loc_model
+		self.loc_convnet = loc_convnet
 
 
 	################################################################################
@@ -30,8 +30,10 @@ class ConvNetCube(Cube):
 	def localize(self, image):
 		"""frame -> coordinates of cube as tuple"""
 		X = get_X_localization(image)
-		convnet = LocalizationConvNet()
-		return convnet.localization_convnet(X, self.loc_model)
+		y = self.loc_convnet.predict(X)[0]
+		y[0] = (y[0] * 640).astype(np.uint16)
+		y[1] = (y[1] * 360).astype(np.uint16)
+		return tuple(y)
 
 
 
@@ -41,11 +43,10 @@ class ConvNetCube(Cube):
 
 	def draw_output(self, image):
 		"""frame -> disp_image with output drawn on it"""
+
 		#=====[ Step 1: get localization	]=====
 		coords = self.localize(image)
 
 		#=====[ Step 2: scale coords	]=====
-		coords[0] *= image.shape[0]
-		coords[1] *= image.shape[1]
-		disp_img = draw_points(image, coords, labels=[1])
+		disp_img = draw_points(image, coords, labels=[True])
 		return disp_img
