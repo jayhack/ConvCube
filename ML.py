@@ -28,17 +28,19 @@ def get_convnet_inputs(frame):
   raise NotImplementedError
   
 
-def init_transfer_convnet(  pretrained_model,
-                            input_shape=(3, 46, 80), 
-                            filter_size=5, 
-                            num_filters=(16, 32),
-                            weight_scale=1e-2, 
-                            bias_scale=0, 
-                            dtype=np.float32):
+def init_localization_convnet(  pretrained_model,
+                                input_shape=(3, 46, 80), 
+                                filter_size=5, 
+                                num_filters=(16, 32),
+                                weight_scale=1e-2, 
+                                bias_scale=0, 
+                                dtype=np.float32):
     """
     Initialize a three layer ConvNet with the following architecture:
 
-    conv - relu - pool - affine - relu - dropout - affine - softmax
+    conv - relu - pool - affine - relu - dropout - affine - euclidean_loss
+
+    (outputs coordinates in R2 corresponding to Cube location)
 
     The convolutional layer uses stride 1 and has padding to perform "same"
     convolution, and the pooling layer is 2x2 stride 2.
@@ -93,7 +95,7 @@ def euclidean_loss(y_pred, y):
 
 
 
-def transfer_convnet(X, model, y=None, reg=0.0, dropout=None):
+def localization_convnet(X, model, y=None, reg=0.0, dropout=None):
   """
   Compute the loss and gradient for a simple three layer ConvNet that uses
   the following architecture:

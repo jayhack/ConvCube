@@ -72,6 +72,7 @@ if __name__ == '__main__':
 
 	#=====[ Step 3: iterate through frames	]=====
 	cv2.namedWindow('DISPLAY')
+	cv2.resizeWindow('DISPLAY', 2560, 1440)
 	ints, exts = [], []
 	for frame in video.iter_children(Frame):
 

@@ -36,7 +36,7 @@ def interesting_points(image):
 						'minDistance':8,
 						'blockSize':5
 					}
-	arr = cv2.goodFeaturesToTrack(gray, mask = None, **feature_params)
+	arr = cv2.goodFeaturesToTrack(image, mask = None, **feature_params)
 	return array_to_tuples(arr)
 
 

@@ -1,15 +1,16 @@
 import pickle
 import random
 import numpy as np
-from ModalDB import ModalClient, Video, Frame
-from preprocess import imagenet_resize
-from ML import make_output_heatmap, make_output_coords
+from sklearn.cross_validation import train_test_split
+from ModalDB import ModalClient
+from ModalDB import Video
+from ModalDB import Frame
+from preprocess import image2convnet_array
 
 
-def put_channels_first(X):
-	"""returns X with depth dimension presented first"""
-	return X.transpose(0, 3, 1, 2).copy()
-
+################################################################################
+####################[ ITERATION UTILS ]#########################################
+################################################################################
 
 def has_label(frame):
 	"""ModalDB.Frame -> has label or not"""
@@ -24,47 +25,76 @@ def iter_labeled_frames(client):
 			yield frame
 			
 
-def load_transfer_dataset(client, train=0.75):
-	"""
-	TODO: should this iterate? downsample?
+def iter_unlabeled_frames(client):
+	"""iterator over random frames without labels"""
+	for frame in client.iter(Frame):
+		if not has_label(frame):
+			yield frame
 
-	loads dataset for transfer learning: 
-		images -> interior corner maps 
 
-	client: ModalDB client
+
+
+
+################################################################################
+####################[ LABEL FACTORY ]###########################################
+################################################################################
+
+def get_label_localization(kpts):
+	"""list of interior corners as tuples -> center of cube
+
+		TODO: change output to (center, size)
 	"""
+	return np.mean(np.array(kpts), axis=0)
+
+
+def get_label_heatmap(image, kpts):
+	"""(image, kpts) -> output of map
+
+		TODO: this needs to be a 1d array...
+	"""
+	raise NotImplementedError
+	kpts = np.array(kpts).astype(np.uint16)
+	label_image = np.zeros((image.shape[0], image.shape[1]))
+	label_image[kpts[:,1], kpts[:,0]] = 1
+	label_image = cv2.GaussianBlur(label_image, (5,5), 2)
+	return label_image
+
+
+def get_convnet_inputs_localization(frame):
+	"""ModalDB.Frame -> (X, y_localization)"""
+	X = image2convnet_array(frame['image'])
+	y_localization = get_label_localization(frame['interior_points'])
+	return X, y_localization
+
+
+def get_convnet_inputs(frame):
+	"""ModalDB.Frame -> (X, y_localization, y_heatmap)"""
+	X = image2convnet_array(frame['image'])
+	y_localization = get_label_localization(frame['interior_points'])
+	y_heatmap = get_label_heatmap(frame['image'])
+	return X, y_localization, y_heatmap
+
+
+
+
+
+
+################################################################################
+####################[ LOADING DATASET ]#########################################
+################################################################################
+
+def load_dataset_localization(client, train=0.75):
+	"""returns dataset for localization: images -> X_train, X_val, y_train, y_val"""
 	X, y = [], []
+	for frame in iter_labeled_frames(client):
+		X_, y_ = get_convnet_inputs_localization(frame)
+		X.append(X_)
+		y.append(y_)
+	X, y = np.array(X), np.array(y)
+	return train_test_split(X, y, )
 
-	for video in client.iter(Video):
-		for frame in video.iter_children(Frame):
-			if has_label(frame):
-		
-				#=====[ Step 1: format image	]=====
-				image = frame['image']
-				image = imagenet_resize(image)
-				X.append(image)
 
-				#=====[ Step 2: get label	]=====
-				kpts = frame['interior_points']
-				output = make_output_coords(kpts)
-				y.append(output)
-
-	#=====[ Step 3: to numpy arrays ]=====
-	X = put_channels_first(np.array(X))
-	y = np.array(y)
-
-	#=====[ Step 4: shuffle	]=====
-	shuffle_ix = np.random.permutation(range(X.shape[0]))
-	X = X[shuffle_ix,:,:,:].copy()
-	y = y[shuffle_ix,:].copy()
-
-	#=====[ Step 5: test and validation	]=====
-	n = X.shape[0]
-	split_ix = int(n*train)
-	X_train = X[:split_ix,:,:,:]
-	y_train = y[:split_ix,]
-	X_val = X[split_ix:,:,:,:]
-	y_val = y[split_ix:,:]
-
-	return X_train, y_train, X_val, y_val
+def load_dataset_heatmap(client, train=0.75):
+	"""loads dataset for localization: images -> cube location"""
+	raise NotImplementedError
 
