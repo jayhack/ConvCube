@@ -3,10 +3,6 @@ from ModalDB import Video
 from ModalDB import Frame
 
 
-################################################################################
-####################[ ITERATION UTILS ]#########################################
-################################################################################
-
 def has_label(frame):
 	"""ModalDB.Frame -> has label or not"""
 	if not frame['interior_points'] is None:
