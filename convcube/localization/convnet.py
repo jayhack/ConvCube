@@ -3,6 +3,9 @@ import scipy as sp
 from convcube.cs231n.classifiers.convnet import init_three_layer_convnet
 from convcube.cs231n.classifiers.convnet import three_layer_convnet
 from convcube.cs231n.classifier_trainer import ClassifierTrainer
+from convcube.cs231n.layers import *
+from convcube.cs231n.fast_layers import *
+from convcube.cs231n.layer_utils import *
 from training import LocalizationConvNetTrainer
 from utils import *
 
@@ -131,8 +134,8 @@ class LocalizationConvNet(object):
 		- dtype: Numpy datatype used to store parameters. Default is float32 for
 		  speed.
 		"""
-		C, H, W = input_shape
-		F1, FC = num_filters
+		C, H, W = self.shape_loc
+		F1, FC = self.num_filters_loc
 		model = {}
 
 		#=====[ Step 1: Set weights from pretrained/std normal 	]=====
@@ -145,12 +148,12 @@ class LocalizationConvNet(object):
 
 		#=====[ Step 2: Scale weights	]=====
 		for i in [2, 3]:
-			model['W%d' % i] *= weight_scale
-			model['b%d' % i] *= bias_scale
+			model['W%d' % i] *= self.weight_scale
+			model['b%d' % i] *= self.bias_scale
 
 		#=====[ Step 3: Convert to dtype	]=====
 		for k in model:
-			model[k] = model[k].astype(dtype, copy=False)
+			model[k] = model[k].astype(self.dtype, copy=False)
 
 		return model
 
@@ -168,7 +171,7 @@ class LocalizationConvNet(object):
 		return loss, grads
 
 
-	def localization_convnet(X, model, y=None, reg=0.0, dropout=None):
+	def localization_convnet(self, X, model, y=None, reg=0.0, dropout=None):
 		"""
 		Compute the loss and gradient for a simple three layer ConvNet that uses
 		the following architecture:
@@ -211,7 +214,7 @@ class LocalizationConvNet(object):
 			scores, cache4 = affine_forward(a2, W3, b3)
 		else:
 			d2, cache3 = dropout_forward(a2, dropout_param)
-		scores, cache4 = affine_forward(d2, W3, b3)
+			scores, cache4 = affine_forward(d2, W3, b3)
 
 		#=====[ Step 3: Return scores during feedforward inference	]=====
 		if y is None:
@@ -240,17 +243,18 @@ class LocalizationConvNet(object):
 
 
 
-	def train_localization_convnet(self, X_train, y_train, X_val, y_val, model):
+	def train_localization_convnet(self, X_train, y_train, X_val, y_val, pretrained_model):
 		"""
 			trains localization convnet. 
 
 			returns model, loss_hist, train_acc_hist, val_acc_hist
 		"""
 		trainer = LocalizationConvNetTrainer()
+		loc_model = self.init_localization_convnet(pretrained_model)
 		model, loss_hist, train_acc_hist, val_acc_hist = trainer.train(
 																		X_train, y_train, 
 																		X_val, y_val, 
-																		model, localization_convnet, 
+																		loc_model, self.localization_convnet, 
 																		dropout=None, reg=0.05, 
 																		learning_rate=0.00005, 
 																		batch_size=50, num_epochs=100,
