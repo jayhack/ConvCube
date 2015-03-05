@@ -7,9 +7,10 @@ from sklearn.cross_validation import cross_val_score
 from cube import Cube
 from convcube.cv.preprocess import resize_grayscale
 from convcube.cv.keypoints import interesting_points
-from convcuve.cv.keypoints import sift_descriptors
+from convcube.cv.keypoints import sift_descriptors
 
-class Cv2Cube(Cube):
+
+class CV2Cube(Cube):
 	"""
 	Class: Cv2Cube
 	--------------

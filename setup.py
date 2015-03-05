@@ -1,4 +1,16 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Build import cythonize
+import numpy as np
+
+extensions = [
+				#=====[ cs231n fast layers	]=====
+				Extension(	
+							'convcube/cs231n/im2col_cython', 
+							['convcube/cs231n/im2col_cython.pyx'], 
+							include_dirs=[np.get_include()]
+						),
+			]
 
 setup(
 		name="convcube",
@@ -6,12 +18,5 @@ setup(
 		author="Jay Hack",
 		author_email="jhack@stanford.edu",
 		description="Computer vision + convnets for Rubiks Cube AR",
-		packages=find_packages(),
-		include_package_data=True,
-		install_requires=[
-							'numpy',
-							'scipy',
-							'scikit-learn'
-							# 'cv2'
-						]
+		ext_modules=cythonize(extensions)
 )

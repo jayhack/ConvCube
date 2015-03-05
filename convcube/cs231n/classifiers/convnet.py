@@ -1,8 +1,8 @@
 import numpy as np
 
-from cs231n.layers import *
-from cs231n.fast_layers import *
-from cs231n.layer_utils import *
+from convcube.cs231n.layers import *
+from convcube.cs231n.fast_layers import *
+from convcube.cs231n.layer_utils import *
 
 
 def two_layer_convnet(X, model, y=None, reg=0.0, dropout=1.0):

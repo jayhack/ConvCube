@@ -1,7 +1,8 @@
 import numpy as np
 import scipy as sp
-from convcube.cs231n.classifiers.convnet import *
-from convcube.cs231n.classifier_trainer import *
+from convcube.cs231n.classifiers.convnet import init_three_layer_convnet
+from convcube.cs231n.classifiers.convnet import three_layer_convnet
+from convcube.cs231n.classifier_trainer import ClassifierTrainer
 from utils import *
 
 
@@ -66,15 +67,15 @@ class LocalizationConvNet(object):
 		    convolution, and the pooling layer is 2x2 stride 2.
     	"""
 
-		model = cs231n_convnet.init_three_layer_convnet(	
-															input_shape=self.shape_pre,
-															num_classes=self.classes_pre,
-															filter_size=self.filter_size,
-															num_filters=self.num_filters_pre,
-															weight_scale=self.weight_scale,
-															bias_scale=self.bias_scale,
-															dtype=self.dtype
-															)
+		model = init_three_layer_convnet(	
+											input_shape=self.shape_pre,
+											num_classes=self.classes_pre,
+											filter_size=self.filter_size,
+											num_filters=self.num_filters_pre,
+											weight_scale=self.weight_scale,
+											bias_scale=self.bias_scale,
+											dtype=self.dtype
+										)
 		return model
 
 
@@ -85,7 +86,7 @@ class LocalizationConvNet(object):
 			returns model, loss_hist, train_acc_hist, val_acc_hist
 		"""
 		model = self.init_pretrain_convnet()
-		trainer = cs231n_trainer.ClassifierTrainer()
+		trainer = ClassifierTrainer()
 		result = trainer.train(
 		 						X_train, y_train, 
 		 						X_val, y_val, 

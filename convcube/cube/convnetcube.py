@@ -2,8 +2,8 @@ import numpy as np
 import scipy as sp
 from cube import Cube
 from convcube.localization import get_X_localization
-from convcube.localization import localization_convnet
-from convcube.drawing import draw_points
+from convcube.localization import LocalizationConvNet
+from convcube.utils import draw_points
 
 class ConvNetCube(Cube):
 	"""

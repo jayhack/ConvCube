@@ -9,3 +9,4 @@ __all__ = 	[
 from wrangling import has_label
 from wrangling import iter_labeled_frames
 from wrangling import iter_unlabeled_frames
+from drawing import draw_points
