@@ -25,9 +25,9 @@ import cv2
 from ModalDB import ModalClient, Video, Frame
 from cvlabel import CVLabeler, euclidean_distance, draw_func, label_func
 
-from schema import convcube_schema
-from preprocess import resize, grayscale, resize_grayscale
-from keypoints import interesting_points
+from convcube.schema import convcube_schema
+from convcube.cv.preprocess import resize, grayscale, resize_grayscale
+from convcube.cv.keypoints import interesting_points
 
 
 @label_func(valid_types=[type(None), str])
