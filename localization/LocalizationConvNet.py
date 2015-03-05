@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
-from cs231n.classifiers.convnet import *
-from cs231n.classifier_trainer import *
+from convcube.cs231n.classifiers.convnet import *
+from convcube.cs231n.classifier_trainer import *
 from convcube.localization.utils import *
 
 

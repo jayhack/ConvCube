@@ -240,7 +240,7 @@ class LocalizationConvNet(object):
 
 
 
-	def train_localiation_convnet(self, 
+	def train_localization_convnet(self, 
 									X_train, y_train, X_val, y_val, 
         							model, loss_function, 
 									reg=0.0, dropout=1.0,
@@ -253,11 +253,16 @@ class LocalizationConvNet(object):
 		trains/returns model on localization dataset
 		"""
 		trainer = LocalizationConvNetTrainer()
-		best_model, loss_history, train_acc_history, val_acc_history = trainer.train(
-				X_train, y_train, X_val, y_val, model, localization_convnet, dropout=None,
-				reg=0.05, learning_rate=0.00005, batch_size=50, num_epochs=100,
-				learning_rate_decay=1.0, update='rmsprop', verbose=True)
-		return best_model
+		out = trainer.train(
+								X_train, y_train, X_val, y_val, model, localization_convnet, 
+								dropout=dropout, reg=reg, learning_rate=learning_rate, 
+								batch_size=batch_size, num_epochs=num_epochs, 
+								learning_rate_decay=learning_rate_decay, update='rmsprop', 
+								verbose=verbose
+							)
+		best_model, loss_hist, train_acc_hist, val_acc_hist = out
+		return best_model, loss_hist, train_acc_hist, val_acc_hist
+
 
 
 
