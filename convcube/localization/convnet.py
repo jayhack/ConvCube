@@ -2,7 +2,7 @@ import numpy as np
 import scipy as sp
 from convcube.cs231n.classifiers.convnet import *
 from convcube.cs231n.classifier_trainer import *
-from convcube.localization.utils import *
+from utils import *
 
 
 class LocalizationConvNet(object):
