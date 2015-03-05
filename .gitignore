@@ -1,14 +1,17 @@
 #=====[ Standard ]=====
-*.npy
-*.pkl
-*~
 *.pyc
+*.pkl
+*.npy
+*~
 
-#=====[ data ]=====
+#=====[ Data ]=====
 data/db/*
 
 #=====[ cs231n ]=====
 convcube/cs231n/*
 
 #=====[ Build ]=====
+build
+dist
+*.egg-info
 
