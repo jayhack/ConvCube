@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
-from convnet.cv.keypoints import kpts_to_tuples
-from convnet.cv.keypoints import array_to_tuples
+from convcube.cv.keypoints import kpts_to_tuples
+from convcube.cv.keypoints import array_to_tuples
 
 def draw_points(frame, points, labels=None):
 	"""

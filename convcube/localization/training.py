@@ -97,14 +97,6 @@ class LocalizationConvNetTrainer(object):
       cost, grads = loss_function(X_batch, model, y_batch, reg=reg, dropout=dropout)
       loss_history.append(cost)
 
-      ######[ DEBUG ]#####
-      # if cost <= 0.1:
-      # print 'batch shape: ', X_batch.shape
-        # predictions = loss_function(X, model, reg=reg, dropout=dropout)
-        # print 'mean prediction on X: ', predictions.mean()
-        # print 'mean difference with y: ', np.mean(np.abs(predictions - y))
-        # print predictions -  y_batch
-      #####[ DEBUG ]#####
 
       #=====[ PARAMETER UPDATE ]=====
       for p in model:
@@ -187,7 +179,6 @@ class LocalizationConvNetTrainer(object):
         
         # keep track of the best model based on validation accuracy
         if val_acc < best_val_acc:
-          print "NEW BEST MODEL"
           # make a copy of the model
           best_val_acc = val_acc
           best_model = {}

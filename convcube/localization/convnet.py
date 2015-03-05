@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import scipy as sp
 from convcube.cs231n.classifiers.convnet import init_three_layer_convnet
@@ -35,6 +36,8 @@ class LocalizationConvNet(object):
 	"""
 
 	def __init__(self, 	
+						pretrained_model=None,
+						model=None,
 						shape_pre=(3, 64, 64),
 						shape_loc=(3, 46, 80),
 						classes_pre=100,
@@ -45,16 +48,22 @@ class LocalizationConvNet(object):
 						bias_scale=0,
 						dtype=np.float32
 				):
-		self.shape_pre = shape_pre
-		self.shape_loc = shape_loc
-		self.classes_pre = classes_pre
-		self.filter_size = filter_size
-		self.num_filters_pre = num_filters_pre
-		self.num_filters_loc = num_filters_loc
+
+		self.pretrained_model = pretrained_model
+		self.model = model
+
 		assert num_filters_pre[0] == num_filters_loc[0]
-		self.weight_scale = weight_scale
-		self.bias_scale = bias_scale
-		self.dtype = dtype
+		self.params = {
+						'shape_pre':shape_pre,
+						'shape_loc':shape_loc,
+						'classes_pre':classes_pre,
+						'filter_size':filter_size,
+						'num_filters_pre':num_filters_pre,
+						'num_filters_loc':num_filters_loc,
+						'weight_scale':weight_scale,
+						'bias_scale':bias_scale,
+						'dtype':dtype
+					}
 
 
 	################################################################################
@@ -71,16 +80,15 @@ class LocalizationConvNet(object):
 		    convolution, and the pooling layer is 2x2 stride 2.
     	"""
 
-		model = init_three_layer_convnet(	
-											input_shape=self.shape_pre,
-											num_classes=self.classes_pre,
-											filter_size=self.filter_size,
-											num_filters=self.num_filters_pre,
-											weight_scale=self.weight_scale,
-											bias_scale=self.bias_scale,
-											dtype=self.dtype
+		return init_three_layer_convnet(	
+											input_shape=self.params['shape_pre'],
+											num_classes=self.params['classes_pre'],
+											filter_size=self.params['filter_size'],
+											num_filters=self.params['num_filters_pre'],
+											weight_scale=self.params['weight_scale'],
+											bias_scale=self.params['bias_scale'],
+											dtype=self.params['dtype']
 										)
-		return model
 
 
 	def pretrain(self, X_train, y_train, X_val, y_val, verbose=True):
@@ -100,8 +108,9 @@ class LocalizationConvNet(object):
 		 						batch_size=50, num_epochs=8,
 								learning_rate_decay=1.0, update='rmsprop', verbose=verbose
 								)
-		model, loss_hist, train_acc_hist, val_acc_hist = result
-		return model, loss_hist, train_acc_hist, val_acc_hist
+		pretrained_model, loss_hist, train_acc_hist, val_acc_hist = result
+		self.pretrained_model = pretrained_model
+		return pretrained_model, loss_hist, train_acc_hist, val_acc_hist
 
 
 
@@ -134,8 +143,8 @@ class LocalizationConvNet(object):
 		- dtype: Numpy datatype used to store parameters. Default is float32 for
 		  speed.
 		"""
-		C, H, W = self.shape_loc
-		F1, FC = self.num_filters_loc
+		C, H, W = self.params['shape_loc']
+		F1, FC = self.params['num_filters_loc']
 		model = {}
 
 		#=====[ Step 1: Set weights from pretrained/std normal 	]=====
@@ -148,12 +157,12 @@ class LocalizationConvNet(object):
 
 		#=====[ Step 2: Scale weights	]=====
 		for i in [2, 3]:
-			model['W%d' % i] *= self.weight_scale
-			model['b%d' % i] *= self.bias_scale
+			model['W%d' % i] *= self.params['weight_scale']
+			model['b%d' % i] *= self.params['bias_scale']
 
 		#=====[ Step 3: Convert to dtype	]=====
 		for k in model:
-			model[k] = model[k].astype(self.dtype, copy=False)
+			model[k] = model[k].astype(self.params['dtype'], copy=False)
 
 		return model
 
@@ -243,27 +252,42 @@ class LocalizationConvNet(object):
 
 
 
-	def train_localization_convnet(self, X_train, y_train, X_val, y_val, pretrained_model):
+	def train(self, X_train, y_train, X_val, y_val):
 		"""
 			trains localization convnet. 
 
 			returns model, loss_hist, train_acc_hist, val_acc_hist
 		"""
 		trainer = LocalizationConvNetTrainer()
-		loc_model = self.init_localization_convnet(pretrained_model)
+		model = self.init_localization_convnet(self.pretrained_model)
 		model, loss_hist, train_acc_hist, val_acc_hist = trainer.train(
 																		X_train, y_train, 
 																		X_val, y_val, 
-																		loc_model, self.localization_convnet, 
+																		model, self.localization_convnet, 
 																		dropout=None, reg=0.00, 
 																		learning_rate=0.00005, 
-																		batch_size=50, num_epochs=30,
+																		batch_size=50, num_epochs=50,
 																		learning_rate_decay=1.0, 
 																		update='rmsprop', verbose=True
 																	)
+		self.model = model
 		return model, loss_hist, train_acc_hist, val_acc_hist
 
 
+
+	def predict(self, X):
+		"""X -> coordinates of cube"""
+		return self.localization_convnet(X, self.model)
+
+
+	def save(self, path):
+		"""saves self to a path"""
+		pickle.dump((self.model, self.pretrained_model, self.params), open(path, 'w'))
+
+
+	def load(self, path):
+		"""loads from a path"""
+		self.model, self.pretrained_model, self.params = pickle.load(open(path))
 
 
 
