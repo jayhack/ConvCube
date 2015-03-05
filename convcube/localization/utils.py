@@ -1,8 +1,8 @@
 import numpy as np
-from preprocess import resize
-from preprocess import put_channels_first
-from wrangling import iter_labeled_frames
 from sklearn.cross_validation import train_test_split
+from convcube.cv.preprocess import resize
+from convcube.cv.preprocess import put_channels_first
+from convcube.utils.wrangling import iter_labeled_frames
 
 
 def localization_resize(image):

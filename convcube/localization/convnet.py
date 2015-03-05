@@ -37,7 +37,7 @@ class LocalizationConvNet(object):
 						num_filters_pre=(10,10),
 						num_filters_loc=(10,10),
 						weight_scale=1e-2,
-						bias_scale=0
+						bias_scale=0,
 						dtype=np.float32
 				):
 		self.pre_shape = pre_shape
@@ -72,7 +72,7 @@ class LocalizationConvNet(object):
 															filter_size=self.filter_size,
 															num_filters=self.num_filters_pre,
 															weight_scale=self.weight_scale,
-															bias_scale=self.bias_scale
+															bias_scale=self.bias_scale,
 															dtype=self.dtype
 															)
 		return model
