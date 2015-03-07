@@ -53,3 +53,27 @@ def sift_descriptors(image, tuples):
 	sift = cv2.SIFT()
 	kp, desc = sift.compute(gray, tuples_to_kpts(tuples))
 	return desc
+
+
+def kpts_to_image_crop(image, kpts):
+	"""(image, kpts) -> tl, br bounds on image crop"""
+	kpts = np.array(kpts)
+	center = np.mean(kpts, axis=0)
+	sides = np.max(kpts, axis=0) - np.min(kpts, axis=0)
+	tl = center - (1.3*sides)
+	br = center + (1.3*sides)
+	tl[tl < 0] = 0
+	br[br < 0] = 0
+
+	if tl[0] > image.shape[1]:
+		tl[0] = image.shape[1]
+	if br[0] > image.shape[1]:
+		br[0] = image.shape[1]
+
+	if tl[1] > image.shape[0]:
+		tl[1] = image.shape[0]
+	if br[1] > image.shape[0]:
+		br[1] = image.shape[0]
+
+	return (int(tl[0]), int(tl[1])), (int(br[0]), int(br[1]))
+

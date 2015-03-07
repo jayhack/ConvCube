@@ -39,7 +39,7 @@ class LocalizationConvNet(object):
 						pretrained_model=None,
 						model=None,
 						shape_pre=(3, 64, 64),
-						shape_loc=(3, 46, 80),
+						shape_loc=(3, 90, 160),
 						classes_pre=100,
 						filter_size=5,
 						num_filters_pre=(10,10),
@@ -152,8 +152,8 @@ class LocalizationConvNet(object):
 		model['b1'] = pretrained_model['b1']
 		model['W2'] = np.random.randn(H * W * F1 / 4, FC)
 		model['b2'] = np.random.randn(FC)
-		model['W3'] = np.random.randn(FC, 2)
-		model['b3'] = np.random.randn(2)
+		model['W3'] = np.random.randn(FC, 4)
+		model['b3'] = np.random.randn(4)
 
 		#=====[ Step 2: Scale weights	]=====
 		for i in [2, 3]:
@@ -265,9 +265,9 @@ class LocalizationConvNet(object):
 																		X_val, y_val, 
 																		model, self.localization_convnet, 
 																		dropout=None, reg=0.00, 
-																		learning_rate=0.00005, 
-																		batch_size=50, num_epochs=80,
-																		learning_rate_decay=1.0, 
+																		learning_rate=0.0002, 
+																		batch_size=50, num_epochs=15,
+																		learning_rate_decay=0.95,
 																		update='rmsprop', verbose=True
 																	)
 		self.model = model

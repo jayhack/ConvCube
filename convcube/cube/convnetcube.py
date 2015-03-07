@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import cv2
 from cube import Cube
 from convcube.localization import get_X_localization
 from convcube.localization import LocalizationConvNet
@@ -31,9 +32,15 @@ class ConvNetCube(Cube):
 		"""frame -> coordinates of cube as tuple"""
 		X = get_X_localization(image)
 		y = self.loc_convnet.predict(X)[0]
-		y[0] = (y[0] * 640).astype(np.uint16)
-		y[1] = (y[1] * 360).astype(np.uint16)
-		return tuple(y)
+		y = y.reshape((2,2))
+		y[:,0] *= 640.0
+		y[:,1] *= 360.0
+		y = y.astype(np.uint16)
+
+		tl = (y[0,0], y[0,1])
+		br = (y[1,0], y[1,1]) #(x,y) tuples
+
+		return tl, br
 
 
 
@@ -45,8 +52,11 @@ class ConvNetCube(Cube):
 		"""frame -> disp_image with output drawn on it"""
 
 		#=====[ Step 1: get localization	]=====
-		coords = self.localize(image)
+		tl, br = self.localize(image)
+
 
 		#=====[ Step 2: scale coords	]=====
-		disp_img = draw_points(image, coords, labels=[True])
+		disp_img = image.copy()
+		cv2.rectangle(disp_img, tl, br, (0, 255, 0), thickness=2)
+		# disp_img = draw_points(image, coords, labels=[True])
 		return disp_img
