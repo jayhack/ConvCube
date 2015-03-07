@@ -30,6 +30,18 @@ from convcube.cv.preprocess import resize, grayscale, resize_grayscale
 from convcube.cv.keypoints import interesting_points
 
 
+def lattice(image, res=20):
+	"""generates lattice of points"""
+	H, W = image.shape[0], image.shape[1]
+	xs = np.linspace(0, W, res).astype(np.uint16)
+	ys = np.linspace(0, H, res).astype(np.uint16)
+	pts = []
+	for x in xs:
+		for y in ys:
+			pts.append((x,y))
+	return pts
+
+
 @label_func(valid_types=[type(None), str])
 def mark_interior_exterior(event, label):
 	"""None -> 'interior' -> 'exterior' -> None"""
@@ -64,6 +76,11 @@ if __name__ == '__main__':
 							euclidean_distance, 
 							mark_interior_exterior)
 
+	# labeler = CVLabeler(	lattice,
+	# 						draw_rubiks_points,
+	# 						euclidean_distance,
+	# 						mark_interior_exterior
+	# 					)
 
 	#=====[ Step 3: Get video	]=====
 	video_name = raw_input('Name of video to mark: ')

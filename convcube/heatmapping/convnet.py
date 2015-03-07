@@ -39,7 +39,7 @@ class HeatmapConvNet(object):
 						pretrained_model=None,
 						model=None,
 						shape_pre=(3, 64, 64),
-						shape_loc=(3, 90, 160),
+						shape_loc=(3, 80, 46),
 						classes_pre=100,
 						filter_size=5,
 						num_filters_pre=(10,10),

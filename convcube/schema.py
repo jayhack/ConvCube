@@ -50,6 +50,12 @@ convcube_schema = {
 						'filename':'exterior_points.pkl',
 						'load_func': lambda p: pickle.load(open(p)),
 						'save_func': lambda x, p: pickle.dump(x,open(p, 'w'))
+						},
+		'bounding_box':{
+						'mode':'disk',
+						'filename':'bounding_box.pkl',
+						'load_func': lambda p: pickle.load(open(p)),
+						'save_func': lambda x, p: pickle.dump(x,open(p, 'w'))
 						}
 	},
 
