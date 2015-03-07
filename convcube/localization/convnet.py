@@ -39,7 +39,7 @@ class LocalizationConvNet(object):
 						pretrained_model=None,
 						model=None,
 						shape_pre=(3, 64, 64),
-						shape_loc=(3, 90, 160),
+						shape_loc=(3, 46, 80),
 						classes_pre=100,
 						filter_size=5,
 						num_filters_pre=(10,10),
@@ -266,7 +266,7 @@ class LocalizationConvNet(object):
 																		model, self.localization_convnet, 
 																		dropout=None, reg=0.00, 
 																		learning_rate=0.0002, 
-																		batch_size=50, num_epochs=30,
+																		batch_size=50, num_epochs=50,
 																		learning_rate_decay=0.95,
 																		update='rmsprop', verbose=True
 																	)

@@ -8,8 +8,8 @@ from convcube.utils.wrangling import iter_labeled_frames
 
 def localization_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
-	if not image.shape[:2] == (90, 160):
-		image = resize(image, (90, 160))
+	if not image.shape[:2] == (46, 80):
+		image = resize(image, (46, 80))
 	return image
 
 
