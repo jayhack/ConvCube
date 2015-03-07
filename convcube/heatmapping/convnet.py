@@ -39,7 +39,7 @@ class HeatmapConvNet(object):
 						pretrained_model=None,
 						model=None,
 						shape_pre=(3, 64, 64),
-						shape_loc=(3, 80, 46),
+						shape_loc=(3, 46, 80),
 						classes_pre=100,
 						filter_size=5,
 						num_filters_pre=(10,10),
@@ -104,9 +104,9 @@ class HeatmapConvNet(object):
 		 						X_val, y_val, 
 		 						model, 
 	 							three_layer_convnet, 
-		 						dropout=None, reg=0.05, learning_rate=0.00005, 
+		 						dropout=None, reg=0.05, learning_rate=0.0005, 
 		 						batch_size=50, num_epochs=8,
-								learning_rate_decay=1.0, update='rmsprop', verbose=verbose
+								learning_rate_decay=0.95, update='rmsprop', verbose=verbose
 								)
 		pretrained_model, loss_hist, train_acc_hist, val_acc_hist = result
 		self.pretrained_model = pretrained_model
@@ -152,8 +152,8 @@ class HeatmapConvNet(object):
 		model['b1'] = pretrained_model['b1']
 		model['W2'] = np.random.randn(H * W * F1 / 4, FC)
 		model['b2'] = np.random.randn(FC)
-		model['W3'] = np.random.randn(FC, 46*80)
-		model['b3'] = np.random.randn(46*80)
+		model['W3'] = np.random.randn(FC, 8)
+		model['b3'] = np.random.randn(8)
 
 		#=====[ Step 2: Scale weights	]=====
 		for i in [2, 3]:

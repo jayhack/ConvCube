@@ -28,6 +28,11 @@ def get_X_heatmap(image, box):
 		return None
 
 
+def get_y_coords(kpts):
+	"""image, kpts -> coordinates of center"""
+	return tuples2array(kpts).reshape(1,8)
+
+
 def get_y_heatmap(image, kpts, box):
 	"""list of interior corners as tuples -> center of cube
 
@@ -70,7 +75,7 @@ def get_y_heatmap(image, kpts, box):
 def get_convnet_inputs_heatmap(frame):
 	"""ModalDB.Frame -> (X, y_localization)"""
 	X = get_X_heatmap(frame['image'], frame['bounding_box'])
-	y = get_y_heatmap(frame['image'], frame['interior_points'], frame['bounding_box'])
+	y = get_y_coords(frame['center_points'])
 	return X, y
 
 
@@ -78,13 +83,14 @@ def load_dataset_heatmap(client, train_size=0.9):
 	"""returns dataset for localization: images -> X_train, X_val, y_train, y_val"""
 	X, y = [], []
 	for frame in iter_labeled_frames(client):
-		X_, y_ = get_convnet_inputs_heatmap(frame)
-		if not X_ is None and not y_ is None:
-			
-			y_ = y_.astype(np.float32)
-			y_ /= y_.max()
-			X.append(X_)
-			y.append(y_)
+		center_points = frame['center_points']
+		if not center_points is None and len(center_points) == 4:
+
+			X_, y_ = get_convnet_inputs_heatmap(frame)
+			if not X_ is None and not y_ is None:
+
+				X.append(X_)
+				y.append(y_)
 
 	X, y = np.vstack(X), np.vstack(y)
 	return train_test_split(X, y, train_size=train_size)

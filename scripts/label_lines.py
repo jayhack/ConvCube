@@ -96,6 +96,12 @@ if __name__ == '__main__':
 	print 'Video name: %s' % video_name
 	video = client.get(Video, video_name)
 
+	#=====[ Step 3: Get color	]=====
+	color_name = raw_input('Color to mark: (wy, bg, or)')
+	assert color_name in ['wy', 'bg', 'or']
+	print 'Color name: %s' % color_name
+
+
 	#=====[ Step 3: setup display	]=====
 	labeler = Labeler()
 
@@ -110,7 +116,12 @@ if __name__ == '__main__':
 			image = crop_image(frame['image'].copy(), box)
 			image = imresize(image, 300)
 			points = labeler.label(image)
+
 			if not points is None:
-				frame['center_points'] = points
+				if frame['center_points'] is None or type(frame['center_points']) != dict:
+					frame['center_points'] = {}
+				d = frame['center_points']
+				d[color_name] = points
+				frame['center_points'] = d
 
 
