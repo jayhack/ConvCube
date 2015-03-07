@@ -100,8 +100,7 @@ class Labeler(object):
 if __name__ == '__main__':
 
 	#=====[ Step 1: boot up	ModalClient ]=====
-	client = ModalClient('./data/db', schema=schema)
-	print convcube_schema
+	client = ModalClient('./data/db', schema=dbschema)
 
 	#=====[ Step 2: Get video	]=====
 	video_name = raw_input('Name of video to mark: ')
@@ -114,7 +113,6 @@ if __name__ == '__main__':
 
 	for frame in video.iter_children(Frame):
 
-		print client.schema.schema_dict
 		#=====[ Get and store data	]=====
 		image = frame['image'].copy()
 		box = labeler.label(image)

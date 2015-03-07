@@ -18,23 +18,24 @@ def get_X_localization(image):
 	return put_channels_first(localization_resize(image))
 
 
-def get_y_localization(image, kpts):
+def get_y_localization(box):
 	"""list of interior corners as tuples -> center of cube
 
 		TODO: y_localization to portion across screen
 		TODO: change output to (center, size)
 	"""
-	tl, br = kpts_to_image_crop(image, kpts)
-	tl = ((float(tl[0]) / 640.0), (float(tl[1]) / 360.0))
-	br = ((float(br[0]) / 640.0), (float(br[1]) / 360.0))
-	y = np.array([tl, br]).flatten()
+	y = np.array(box).reshape(1,4)
+	# tl, br = kpts_to_image_crop(aimage, kpts)
+	# tl = ((float(tl[0]) / 640.0), (float(tl[1]) / 360.0))
+	# br = ((float(br[0]) / 640.0), (float(br[1]) / 360.0))
+	# y = np.array([tl, br]).flatten()
 	return y
 
 
 def get_convnet_inputs_localization(frame):
 	"""ModalDB.Frame -> (X, y_localization)"""
 	X = get_X_localization(frame['image'])
-	y = get_y_localization(frame['image'], frame['interior_points'])
+	y = get_y_localization(frame['bounding_box'])
 	return X, y
 
 

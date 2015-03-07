@@ -5,8 +5,8 @@ from ModalDB import Frame
 
 def has_label(frame):
 	"""ModalDB.Frame -> has label or not"""
-	if not frame['interior_points'] is None:
-		return len(frame['interior_points']) > 0
+	if not frame['bounding_box'] is None:
+		return len(frame['bounding_box']) > 0
 
 
 def iter_labeled_frames(client):
