@@ -23,7 +23,7 @@ import cv2
 
 from ModalDB import Video, Frame
 
-convcube_schema = {
+dbschema = {
 
 	Frame: {
 

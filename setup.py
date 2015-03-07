@@ -14,7 +14,7 @@ extensions = [
 
 setup(
 		name="convcube",
-		version="0.1",
+		version="0.2",
 		author="Jay Hack",
 		author_email="jhack@stanford.edu",
 		description="Computer vision + convnets for Rubiks Cube AR",

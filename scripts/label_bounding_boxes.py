@@ -23,7 +23,7 @@ import time
 import numpy as np
 import cv2
 from ModalDB import ModalClient, Video, Frame
-from convcube.schema import convcube_schema
+from convcube import dbschema
 
 
 class Labeler(object):
@@ -100,7 +100,7 @@ class Labeler(object):
 if __name__ == '__main__':
 
 	#=====[ Step 1: boot up	ModalClient ]=====
-	client = ModalClient('./data/db', schema=convcube_schema)
+	client = ModalClient('./data/db', schema=schema)
 	print convcube_schema
 
 	#=====[ Step 2: Get video	]=====

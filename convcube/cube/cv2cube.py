@@ -44,8 +44,8 @@ class CV2Cube(Cube):
 		if labels is None:
 			labels = [None]*len(keypoints)
 		disp_image = image.copy()
-		negative = [k for k,l in zip(keypoints, labels) if not l]
 		positive = [k for k,l in zip(keypoints, labels) if l]
+		negative = [k for k,l in zip(keypoints, labels) if not l]
 		for n in negative:
 			cv2.circle(disp_image, n, 3, color=(0, 0, 255), thickness=1)
 		for p in positive:
