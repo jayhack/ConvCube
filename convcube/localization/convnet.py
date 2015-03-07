@@ -266,7 +266,7 @@ class LocalizationConvNet(object):
 																		model, self.localization_convnet, 
 																		dropout=None, reg=0.00, 
 																		learning_rate=0.0002, 
-																		batch_size=50, num_epochs=50,
+																		batch_size=100, num_epochs=60,
 																		learning_rate_decay=0.95,
 																		update='rmsprop', verbose=True
 																	)

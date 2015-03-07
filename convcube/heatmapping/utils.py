@@ -5,6 +5,7 @@ from sklearn.cross_validation import train_test_split
 from convcube.cv.preprocess import resize
 from convcube.cv.preprocess import put_channels_first
 from convcube.cv.keypoints import kpts_to_image_crop
+from convcube.cv.cropping import crop_box
 from convcube.utils.wrangling import iter_labeled_frames
 
 
@@ -15,8 +16,11 @@ def heatmap_resize(image):
 	return image
 
 
-def get_X_heatmap(image, kpts):
+def get_X_heatmap(image, box):
 	"""image -> array for input to convnet"""
+	image = crop_image(image, box)
+	kpts = crop_points(kpts, box)
+
 	tl, br = kpts_to_image_crop(image, kpts)
 	extracted = image[tl[1]:br[1], tl[0]:br[0], :]
 	if extracted.shape[0] > 0 and extracted.shape[1] > 0:
