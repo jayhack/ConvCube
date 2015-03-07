@@ -9,7 +9,7 @@ __all__ = 	[
 				'LocalizationConvNet', 'load_dataset_localization'
 			]
 
-from schema import dbschema
+from db import dbschema
 from cube import ConvNetCube
 from cube import CV2Cube
 from localization import LocalizationConvNet
