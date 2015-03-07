@@ -3,20 +3,60 @@ import cv2
 from preprocess import resize, grayscale, resize_grayscale
 
 
-def kpts_to_tuples(kpts):
+################################################################################
+####################[ Point Conversion Utilities ]##############################
+################################################################################
+
+def array2tuples(pts):
+	"""np.array -> list of tuples"""
+	return [tuple(p) for p in pts.tolist()]
+
+
+def tuples2array(tuples):
+	"""list of tuples -> np.array"""
+	return np.array(tuples)
+
+
+def kpts2tuples(kpts):
 	"""list of cv2.KeyPoints -> list of (x,y)"""
 	return [k.pt for k in kpts]
 
 
-def tuples_to_kpts(tuples, size=5):
+def tuples2kpts(tuples, size=5):
 	"""list of (x,y) -> list of cv2.KeyPoints"""
 	return [cv2.KeyPoint(t[0], t[1], size) for t in tuples]
 
 
-def array_to_tuples(array):
-	"""np.array -> list of (x,y)"""
-	return [tuple(p) for p in array[:, 0, :]]
+def tuples2ints(tuples):
+	"""converts list of (x,y) to all ints"""
+	return [(int(p[0]), int(p[1])) for p in tuples]
 
+
+def normalize_points(pts, image):
+	"""(pts as tuples, image) -> normalized points"""
+	pts = tuples2array(pts).astype(np.float32)
+	H, W = image.shape[0], image.shape[1]
+	pts[:,0] /= float(W)
+	pts[:,1] /= float(H)
+	return array2tuples(pts)
+
+
+def denormalize_points(pts, image):
+	"""(pts as tuples, image) -> denormalized points"""
+	pts = tuples2array(pts).astype(np.float32)
+	H, W = image.shape[0], image.shape[1]
+	pts[:,0] *= float(W)
+	pts[:,1] *= float(H)
+	pts = pts.astype(np.uint16)
+	return array2tuples(pts)
+
+
+
+
+
+################################################################################
+####################[ Keypoint Extraction ]#####################################
+################################################################################
 
 def harris_corners(image):
 	"""(grayscale) image -> harris corners as a list of tuples"""

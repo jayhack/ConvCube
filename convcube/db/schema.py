@@ -56,6 +56,12 @@ dbschema = {
 						'filename':'bounding_box.pkl',
 						'load_func': lambda p: pickle.load(open(p)),
 						'save_func': lambda x, p: pickle.dump(x,open(p, 'w'))
+						},
+		'center_points':{
+						'mode':'disk',
+						'filename':'center_points.pkl',
+						'load_func': lambda p: pickle.load(open(p)),
+						'save_func': lambda x, p: pickle.dump(x,open(p, 'w'))
 						}
 	},
 

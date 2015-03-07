@@ -1,10 +1,12 @@
 import numpy as np
 import cv2
+from keypoints import tuples2array, array2tuples
+
 
 def crop_image(image, box):
 	"""(image, box) -> cropped image"""
 	tl, br = box[0], box[1]
-	return image[tl[1]:br[1], tl[0]:br[0]]
+	return image[int(tl[1]):int(br[1]), int(tl[0]):int(br[0])]
 
 
 def point_in_box(pt, box):
