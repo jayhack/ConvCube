@@ -105,7 +105,6 @@ if __name__ == '__main__':
 	#=====[ Step 3: setup display	]=====
 	labeler = Labeler()
 
-
 	for frame in video.iter_children(Frame):
 
 		if not frame['bounding_box'] is None:

@@ -9,7 +9,7 @@ from convcube.cv.keypoints import tuples2array
 from convcube.cv.cropping import crop_image
 from convcube.cv.cropping import crop_points
 from convcube.utils.wrangling import iter_labeled_frames
-
+from ModalDB import Frame, Video
 
 def heatmap_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
@@ -28,9 +28,12 @@ def get_X_heatmap(image, box):
 		return None
 
 
-def get_y_coords(kpts):
+def get_y_coords(center_points):
 	"""image, kpts -> coordinates of center"""
-	return tuples2array(kpts).reshape(1,8)
+	kpts = tuples2array(center_points['bg'])
+	kpts = np.mean(kpts, axis=0)
+	return kpts
+	# return tuples2array(kpts).reshape(1,8)
 
 
 def get_y_heatmap(image, kpts, box):
@@ -82,9 +85,11 @@ def get_convnet_inputs_heatmap(frame):
 def load_dataset_heatmap(client, train_size=0.9):
 	"""returns dataset for localization: images -> X_train, X_val, y_train, y_val"""
 	X, y = [], []
+
 	for frame in iter_labeled_frames(client):
+
 		center_points = frame['center_points']
-		if not center_points is None and len(center_points) == 4:
+		if not center_points is None and 'bg' in center_points and len(center_points['bg']) == 4:
 
 			X_, y_ = get_convnet_inputs_heatmap(frame)
 			if not X_ is None and not y_ is None:
