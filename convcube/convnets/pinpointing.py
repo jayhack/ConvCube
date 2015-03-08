@@ -43,7 +43,7 @@ def get_convnet_inputs_pinpointing(frame, color):
 	return X, y
 
 
-def load_dataset_heatmap(client, color, train_size=0.9):
+def load_dataset_pinpointing(client, color, train_size=0.9):
 	"""returns dataset for localization: images -> X_train, X_val, y_train, y_val"""
 	assert color in ['bg', 'wy', 'or']
 	X, y = [], []

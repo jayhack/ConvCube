@@ -7,8 +7,7 @@ from convcube.cs231n.classifier_trainer import ClassifierTrainer
 from convcube.cs231n.layers import *
 from convcube.cs231n.fast_layers import *
 from convcube.cs231n.layer_utils import *
-from training import LocalizationConvNetTrainer
-from utils import *
+from euclidean_trainer import EuclideanConvNetTrainer
 
 
 class EuclideanConvNet(object):
@@ -255,23 +254,28 @@ class EuclideanConvNet(object):
 
 
 
-	def train(self, X_train, y_train, X_val, y_val):
+	def train(self, X_train, y_train, X_val, y_val, 	
+													dropout=None, reg=0.0001, 
+													learning_rate=0.0007, 
+													batch_size=100, num_epochs=100,
+													learning_rate_decay=0.95, 
+													update='rmsprop', verbose=True):
 		"""
 			trains localization convnet. 
 
 			returns model, loss_hist, train_acc_hist, val_acc_hist
 		"""
-		trainer = LocalizationConvNetTrainer()
+		trainer = EuclideanConvNetTrainer()
 		model = self.init_localization_convnet(self.pretrained_model)
 		model, loss_hist, train_acc_hist, val_acc_hist = trainer.train(
 																		X_train, y_train, 
 																		X_val, y_val, 
 																		model, self.localization_convnet, 
-																		dropout=None, reg=0.0001, 
-																		learning_rate=0.0007, 
-																		batch_size=100, num_epochs=100,
-																		learning_rate_decay=0.95, 
-																		update='rmsprop', verbose=True
+																		dropout=dropout, reg=reg, 
+																		learning_rate=learning_rate, 
+																		batch_size=batch_size, num_epochs=num_epochs,
+																		learning_rate_decay=learning_rate_decay, 
+																		update=update, verbose=verbose
 																	)
 		self.model = model
 		return model, loss_hist, train_acc_hist, val_acc_hist
