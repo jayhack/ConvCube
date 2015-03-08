@@ -28,34 +28,42 @@ def get_X_pinpointing(image, box):
 		return None
 
 
-def get_y_pinpointing(center_points, color):
-	"""image, kpts -> coordinates of center"""
-	kpts = tuples2array(center_points[color])
+def get_y_pinpointing(center_points):
+	"""image, kpts -> coordinates of center. -1s when it doesn't exist"""
+	default = -np.ones((4,2))
+	wy, bg, ro = default, default, default
+
+	if 'wy' in center_points:
+		wy = tuples2array(center_points['wy'])
+	if 'bg' in center_points:
+		bg = tuples2array(center_points['bg'])
+	if 'or' in center_points:
+		ro = tuples2array(center_points['or'])
+
+	kpts = np.hstack([wy, bg, ro])
 	kpts = np.mean(kpts, axis=0)
 	return kpts
 
 
 
-def get_convnet_inputs_pinpointing(frame, color):
+def get_convnet_inputs_pinpointing(frame):
 	"""ModalDB.Frame -> (X, y_localization)"""
 	X = get_X_pinpointing(frame['image'], frame['bounding_box'])
-	y = get_y_pinpointing(frame['center_points'], color)
+	y = get_y_pinpointing(frame['center_points'])
 	return X, y
 
 
-def load_dataset_pinpointing(client, color, train_size=0.9):
+def load_dataset_pinpointing(client, train_size=0.9):
 	"""returns dataset for localization: images -> X_train, X_val, y_train, y_val"""
-	assert color in ['bg', 'wy', 'or']
 	X, y = [], []
 
 	for frame in iter_labeled_frames(client):
 
 		center_points = frame['center_points']
-		if not center_points is None and color in center_points and len(center_points[color]) == 4:
+		if type(center_points) == dict and len(center_points.keys()) > 0:
 
-			X_, y_ = get_convnet_inputs_pinpointing(frame, color)
+			X_, y_= get_convnet_inputs_pinpointing(frame)
 			if not X_ is None and not y_ is None:
-
 				X.append(X_)
 				y.append(y_)
 

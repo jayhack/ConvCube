@@ -2,8 +2,9 @@ import numpy as np
 import scipy as sp
 import cv2
 from cube import Cube
-from convcube.localization import get_X_localization
-from convcube.localization import LocalizationConvNet
+from convcube.convnets import get_X_localization
+from convcube.convnets import get_X_pinpointing
+from convcube.convnets import EuclideanConvNet
 from convcube.utils import draw_points
 
 class ConvNetCube(Cube):

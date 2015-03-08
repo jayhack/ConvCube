@@ -6,11 +6,14 @@ __all__ = 	[
 				'ConvNetCube', 'CV2Cube',
 
 				#=====[ localization	]=====
-				'LocalizationConvNet', 'load_dataset_localization'
+				'EuclideanConvNet', 'EuclideanConvNetTrainer', 
+				'load_dataset_localization', 'load_dataset_pinpointing'
 			]
 
 from db import dbschema
 from cube import ConvNetCube
 from cube import CV2Cube
-from localization import LocalizationConvNet
-from localization import load_dataset_localization
+from convnets.euclidean import EuclideanConvNet
+from convnets.euclidean_trainer import EuclideanConvNetTrainer
+from convnets.localization import load_dataset_localization
+from convnets.pinpointing import load_dataset_pinpointing
