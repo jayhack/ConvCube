@@ -28,69 +28,32 @@ def get_X_pinpointing(image, box):
 		return None
 
 
-def get_y_pinpointing(center_points):
+def get_y_pinpointing(center_points, color):
 	"""image, kpts -> coordinates of center"""
-	kpts = tuples2array(center_points['bg'])
+	kpts = tuples2array(center_points[color])
 	kpts = np.mean(kpts, axis=0)
 	return kpts
 
 
-def get_y_heatmap(image, kpts, box):
-	"""list of interior corners as tuples -> center of cube
 
-		TODO: y_localization to portion across screen
-		TODO: change output to (center, size)
-	"""
-	try:
-		if kpts is None or kpts == []:
-			return None
-
-		box = denormalize_points(box, image)
-		tl, br = box[0], box[1]
-
-		y = np.zeros((int(br[1])-int(tl[1]), int(br[0])-int(tl[0])))
-
-		if not y.shape[0] > 0 or not y.shape[1] > 0:
-			return None
-
-		kpts = denormalize_points(kpts, image)
-		kpts = crop_points(kpts, box)
-		if len(kpts) == 0:
-			return None
-
-		kpts = tuples2array(kpts).astype(np.uint16)
-		y[kpts[:,1], kpts[:,0]] = 1
-
-		kernel = np.ones((5,5),np.uint8)
-		y = cv2.morphologyEx(y, cv2.MORPH_CLOSE, kernel)
-		y = cv2.morphologyEx(y, cv2.MORPH_CLOSE, kernel)
-		# y = cv2.GaussianBlur(y, (5,5), 3)
-		y = y.astype(np.float32)
-		y = y / y.max()
-		y = pinpointing_resize(y)
-
-		return pinpointing_resize(y).flatten()
-	except:
-		return None
-
-
-def get_convnet_inputs_heatmap(frame):
+def get_convnet_inputs_pinpointing(frame, color):
 	"""ModalDB.Frame -> (X, y_localization)"""
 	X = get_X_pinpointing(frame['image'], frame['bounding_box'])
-	y = get_y_pinpointing(frame['center_points'])
+	y = get_y_pinpointing(frame['center_points'], color)
 	return X, y
 
 
-def load_dataset_heatmap(client, train_size=0.9):
+def load_dataset_heatmap(client, color, train_size=0.9):
 	"""returns dataset for localization: images -> X_train, X_val, y_train, y_val"""
+	assert color in ['bg', 'wy', 'or']
 	X, y = [], []
 
 	for frame in iter_labeled_frames(client):
 
 		center_points = frame['center_points']
-		if not center_points is None and 'bg' in center_points and len(center_points['bg']) == 4:
+		if not center_points is None and color in center_points and len(center_points[color]) == 4:
 
-			X_, y_ = get_convnet_inputs_heatmap(frame)
+			X_, y_ = get_convnet_inputs_heatmap(frame, color)
 			if not X_ is None and not y_ is None:
 
 				X.append(X_)
