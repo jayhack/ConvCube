@@ -53,7 +53,7 @@ def load_dataset_pinpointing(client, color, train_size=0.9):
 		center_points = frame['center_points']
 		if not center_points is None and color in center_points and len(center_points[color]) == 4:
 
-			X_, y_ = get_convnet_inputs_heatmap(frame, color)
+			X_, y_ = get_convnet_inputs_pinpointing(frame, color)
 			if not X_ is None and not y_ is None:
 
 				X.append(X_)
