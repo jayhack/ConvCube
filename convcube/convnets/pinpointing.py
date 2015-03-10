@@ -50,9 +50,15 @@ def get_X_pinpointing(image, box):
 	"""image -> array for input to convnet"""
 	box = denormalize_points(box, image)
 	if (box[1][0] - box[0][0] > 5) and (box[1][1] - box[0][1] > 5):
-		image = crop_image(image, box)
-		# return get_border(image)
-		return put_channels_first(pinpointing_resize(image))
+
+		image = crop_image(image, box).astype(np.float32)
+		image = pinpointing_resize(image)
+
+		# image *= (2.0/255.0)
+		# image -= 1.0
+
+		return put_channels_first(image)
+
 	else:
 		return None
 

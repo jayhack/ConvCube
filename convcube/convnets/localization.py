@@ -12,13 +12,14 @@ from ModalDB import ModalClient, Video, Frame
 
 def localization_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
-	if not image.shape[:2] == (100, 100):
-		image = resize(image, (100, 100))
+	if not image.shape[:2] == (64, 64):
+		image = resize(image, (64, 64))
 	return image
 
 
 def get_X_localization(image):
 	"""image -> array for input to convnet"""
+
 	image = localization_resize(image).astype(np.float32)
 
 	#=====[ Scale to -1, 1	]=====
@@ -66,9 +67,21 @@ def load_dataset_localization(client, train_size=0.75):
 	ix = range(len(Xs))
 	random.shuffle(ix)
 	split_ix = int(train_size*len(Xs))
-	X_train = np.vstack(itertools.chain(*Xs[:split_ix]))
-	y_train = np.vstack(itertools.chain(*ys[:split_ix]))
-	X_val = np.vstack(itertools.chain(*Xs[split_ix:]))
-	y_val = np.vstack(itertools.chain(*ys[split_ix:]))
+
+	X_train, y_train = [], []
+	for i in ix[:split_ix]:
+		X_train += Xs[i]
+		y_train += ys[i]
+
+	X_val, y_val = [], []
+	for i in ix[split_ix:]:
+		X_val += Xs[i]
+		y_val += ys[i]
+
+
+	X_train = np.vstack(X_train)
+	y_train = np.vstack(y_train)
+	X_val = np.vstack(X_val)
+	y_val = np.vstack(y_val)
 
 	return X_train, X_val, y_train, y_val
