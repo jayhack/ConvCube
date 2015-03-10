@@ -61,7 +61,7 @@ def denormalize_points(pts, image):
 def harris_corners(image):
 	"""(grayscale) image -> harris corners as a list of tuples"""
 	image = grayscale(image)
-	dst = cv2.cornerHarris(image, 7, 5, 0.04)
+	dst = cv2.cornerHarris(image, 5, 5, 0.04)
 	corners_img = (dst>0.01*dst.max())
 	ys, xs = np.nonzero(corners_img)
 	return zip(xs, ys)
@@ -71,13 +71,13 @@ def interesting_points(image):
 	"""(grayscale) gray image -> interesting points as list of tuples"""
 	image = grayscale(image)
 	feature_params = {
-						'maxCorners':1000,
+						'maxCorners':100,
 						'qualityLevel':0.01,
-						'minDistance':8,
-						'blockSize':5
+						'minDistance':5,
+						'blockSize':3
 					}
 	arr = cv2.goodFeaturesToTrack(image, mask = None, **feature_params)
-	return array_to_tuples(arr)
+	return array2tuples(arr[:, 0, :].astype(np.uint16))
 
 
 def sift_points(gray):

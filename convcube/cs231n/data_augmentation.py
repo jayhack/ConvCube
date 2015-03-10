@@ -86,7 +86,6 @@ def random_contrast(X, scale=(0.8, 1.2)):
   contrast = np.random.uniform(low, high, N)
   for i in range(N):
     out[i, :, :, :] = X[i, :, :, :] * contrast[i]
-
   #############################################################################
   #                           END OF YOUR CODE                                #
   #############################################################################

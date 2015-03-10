@@ -1,6 +1,6 @@
 __all__ = 	[
 				#=====[ schema	]=====
-				'dbschema'
+				'dbschema',
 			
 				#=====[ cube	]=====
 				'ConvNetCube', 'CV2Cube',

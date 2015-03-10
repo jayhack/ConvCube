@@ -3,7 +3,10 @@ import numpy as np
 import scipy as sp
 from convcube.cs231n.classifiers.convnet import init_three_layer_convnet
 from convcube.cs231n.classifiers.convnet import three_layer_convnet
+from convcube.cs231n.classifiers.convnet import init_five_layer_convnet
+from convcube.cs231n.classifiers.convnet import five_layer_convnet
 from convcube.cs231n.classifier_trainer import ClassifierTrainer
+
 from convcube.cs231n.layers import *
 from convcube.cs231n.fast_layers import *
 from convcube.cs231n.layer_utils import *
@@ -42,9 +45,10 @@ class EuclideanConvNet(object):
 						shape_loc=(3, 46, 80),
 						classes_pre=100,
 						size_out=4,
-						filter_size=5,
-						num_filters_pre=(10,10),
-						num_filters_loc=(10,10, 64),
+						filter_sizes_pre=(8, 5, 5),
+						filter_sizes_loc=(8, 5, 5),
+						num_filters_pre=(10,10,32),
+						num_filters_loc=(10,10,32),
 						weight_scale=1e-2,
 						bias_scale=0,
 						dtype=np.float32
@@ -59,7 +63,8 @@ class EuclideanConvNet(object):
 						'shape_loc':shape_loc,
 						'classes_pre':classes_pre,
 						'size_out':size_out,
-						'filter_size':filter_size,
+						'filter_sizes_pre':filter_sizes_pre,
+						'filter_sizes_loc':filter_sizes_loc,
 						'num_filters_pre':num_filters_pre,
 						'num_filters_loc':num_filters_loc,
 						'weight_scale':weight_scale,
@@ -76,21 +81,95 @@ class EuclideanConvNet(object):
 		"""
 		    Initialize a three layer ConvNet with the following architecture:
 
-		    conv - relu - pool - affine - relu - dropout - affine - softmax
+		    five-layer convnet, with two conv-relu-pool, then affine-relu, then affine
 
 		    The convolutional layer uses stride 1 and has padding to perform "same"
 		    convolution, and the pooling layer is 2x2 stride 2.
-    	"""
 
-		return init_three_layer_convnet(	
-											input_shape=self.params['shape_pre'],
-											num_classes=self.params['classes_pre'],
-											filter_size=self.params['filter_size'],
-											num_filters=self.params['num_filters_pre'],
-											weight_scale=self.params['weight_scale'],
-											bias_scale=self.params['bias_scale'],
-											dtype=self.params['dtype']
-										)
+		    Only the first three layers will get reused
+		"""
+		C, H, W = self.params['shape_pre']
+		F1, F2, F3, FC = self.params['num_filters_pre']
+		filter_sizes = self.params['filter_sizes_pre']
+		num_classes = self.params['classes_pre']
+		model = {}
+
+		#=====[ Step 1: Set weights from pretrained/std normal 	]=====
+		#####[ CONV-RELU-POOL	]#####
+		model['W1'] = np.random.randn(F1, 3, filter_sizes[0], filter_sizes[0])) #reused
+		model['b1'] = np.random.randn(F1)
+
+		#####[ CONV-RELU-POOL	]#####
+		model['W2'] = np.random.randn(F2, F1, filter_sizes[1], filter_sizes[1]) #reused
+		model['b2'] = np.random.randn(F2)
+
+		######[ AFFINE-RELU FULLY CONNECTED	]#####
+		#TODO: what should that parameter be in the fully connected layer?
+		#goes from output of W2 to FC, so we need to find the shape of W2
+		model['W3'] = np.random.randn(FC, 1024)
+		model['b3'] = np.random.randn(FC)
+
+		#####[ CONV-RELU-POOL	]#####
+		# model['W3'] = np.random.randn(H * W * F2 / 4, FC) #fully connected layer
+		model['W4'] = np.random.randn(num_classes, FC)
+		model['b4'] = np.random.randn(num_classes)
+
+
+		#=====[ Step 2: Scale weights	]=====
+		for i in [1, 2, 3, 4]:
+			model['W%d' % i] *= self.params['weight_scale']
+			model['b%d' % i] *= self.params['bias_scale']
+
+		#=====[ Step 3: Convert to dtype	]=====
+		for k in model:
+			model[k] = model[k].astype(self.params['dtype'], copy=False)
+
+		return model
+
+
+	def pretrain_convnet(self):
+		"""runs the pretrain convnet"""
+		#=====[ Step 1: initialization	]=====
+		W1, b1 = model['W1'], model['b1']
+		W2, b2 = model['W2'], model['b2']
+		W3, b3 = model['W3'], model['b3']
+		conv_param_1 = {'stride': 1, 'pad': (W1.shape[2] - 1) / 2}
+		conv_param_2 = {'stride': 1, 'pad': (W2.shape[2] - 1) / 2}
+		pool_param = {'stride': 2, 'pool_height': 2, 'pool_width': 2}
+		dropout_param = {'p': dropout}
+		dropout_param['mode'] = 'test' if y is None else 'train'
+
+		#=====[ Step 2: forward pass	]=====
+		a1, cache1 = conv_relu_pool_forward(X, W1, b1, conv_param_1, pool_param)
+		a2, cache2 = conv_relu_pool_forward(a1, W2, b2, conv_param_2, pool_param)
+		a3, cache3 = affine_relu_forward(a2, W3, b3)
+		scores, cache4 = affine_forward(a3, W4, b4)
+
+		#=====[ Step 3: scores if not training	]=====
+		if y is None:
+			return scores
+
+		#=====[ Step 4: backward pass	]=====
+		data_loss, dscores = softmax_loss(scores, y)
+		da3, dW4, db4 = affine_backward(dscores, cache4)
+		da2, dW3, db3 = affine_relu_backward(da3, cache3)
+		da1, dW2, db2 = conv_relu_pool_backward(da2, cache2)
+		dX, dW1, db1 = conv_relu_pool_backward(da1, cache1)
+	
+		grads = { 
+					'W1': dW1, 'b1': db1, 
+					'W2': dW2, 'b2': db2, 
+					'W3': dW3, 'b3': db3,
+					'W4': dW4, 'b4': db4 
+				}
+
+		reg_loss = 0.0
+		for p in ['W1', 'W2', 'W3']:
+			W = model[p]
+			reg_loss += 0.5 * reg * np.sum(W * W)
+			grads[p] += reg * W
+		loss = data_loss + reg_loss
+		return loss, grads
 
 
 	def pretrain(self, X_train, y_train, X_val, y_val, verbose=True):
@@ -105,9 +184,9 @@ class EuclideanConvNet(object):
 		 						X_train, y_train, 
 		 						X_val, y_val, 
 		 						model, 
-	 							three_layer_convnet, 
-		 						dropout=None, reg=0.05, learning_rate=0.0005, 
-		 						batch_size=50, num_epochs=8,
+	 							pretrain_convnet,
+		 						dropout=1.0, reg=0.05, learning_rate=0.0005, 
+		 						batch_size=50, num_epochs=5,
 								learning_rate_decay=0.95, update='rmsprop', verbose=verbose
 								)
 		pretrained_model, loss_hist, train_acc_hist, val_acc_hist = result
@@ -146,25 +225,28 @@ class EuclideanConvNet(object):
 		  speed.
 		"""
 		C, H, W = self.params['shape_loc']
-		F1, F2, FC = self.params['num_filters_loc']
+		F1, F2, F3, FC = self.params['num_filters_loc']
 		model = {}
 
 		#=====[ Step 1: Set weights from pretrained/std normal 	]=====
 		model['W1'] = pretrained_model['W1']	#copy pretrained model bottom conv layer
 		model['b1'] = pretrained_model['b1']
 
-		model['W2'] = np.random.randn(F2, F1, 4, 5) #conv layer
+		model['W2'] = np.random.randn(F2, F1, 5, 5) # conv layer
 		model['b2'] = np.random.randn(F2)
 
-		# model['W3'] = np.random.randn(H * W * F2 / 20, FC) #fully connected layer
-		model['W3'] = np.random.randn(10*11*19, FC) #this works...
-		model['b3'] = np.random.randn(FC)
+		# model['W3'] = np.random.randn(H * W * F2 / 4, FC) #fully connected layer
+		model['W3'] = np.random.randn(F3, F2, 5, 5)
+		model['b3'] = np.random.randn(F3)
 
-		model['W4'] = np.random.randn(FC, self.params['size_out'])
-		model['b4'] = np.random.randn(self.params['size_out'])
+		model['W4'] = np.random.randn(1024, FC)
+		model['b4'] = np.random.randn(FC)
+
+		model['W5'] = np.random.randn(FC, self.params['size_out'])
+		model['b5'] = np.random.randn(self.params['size_out'])
 
 		#=====[ Step 2: Scale weights	]=====
-		for i in [2, 3, 4]:
+		for i in [2, 3, 4, 5]:
 			model['W%d' % i] *= self.params['weight_scale']
 			model['b%d' % i] *= self.params['bias_scale']
 
@@ -188,7 +270,7 @@ class EuclideanConvNet(object):
 		return loss, grads
 
 
-	def localization_convnet(self, X, model, y=None, reg=0.0, dropout=None):
+	def transfer_convnet(self, X, model, y=None, reg=0.0, dropout=None):
 		"""
 		Compute the loss and gradient for a simple three layer ConvNet that uses
 		the following architecture:
@@ -220,8 +302,10 @@ class EuclideanConvNet(object):
 		W2, b2 = model['W2'], model['b2']
 		W3, b3 = model['W3'], model['b3']
 		W4, b4 = model['W4'], model['b4']
+		W5, b5 = model['W5'], model['b5']		
 		conv_param_1 = {'stride': 1, 'pad': (W1.shape[2] - 1) / 2}
 		conv_param_2 = {'stride': 1, 'pad': (W2.shape[2] - 1) / 2}
+		conv_param_3 = {'stride': 1, 'pad': (W3.shape[2] - 1) / 2}
 		pool_param = {'stride': 2, 'pool_height': 2, 'pool_width': 2}
 		dropout_param = {'p': dropout}
 		dropout_param['mode'] = 'test' if y is None else 'train'
@@ -229,8 +313,9 @@ class EuclideanConvNet(object):
 		#=====[ Step 2: Forward pass	]=====
 		a1, cache1 = conv_relu_pool_forward(X, W1, b1, conv_param_1, pool_param)
 		a2, cache2 = conv_relu_pool_forward(a1, W2, b2, conv_param_2, pool_param)
-		a3, cache3 = affine_relu_forward(a2, W3, b3)
-		scores, cache4 = affine_forward(a3, W4, b4)
+		a3, cache3 = conv_relu_pool_forward(a2, W3, b3, conv_param_3, pool_param)
+		a4, cache4 = affine_relu_forward(a3, W4, b4)
+		scores, cache5 = affine_forward(a4, W5, b5)
 
 		#=====[ Step 3: Return scores during feedforward inference	]=====
 		if y is None:
@@ -238,10 +323,22 @@ class EuclideanConvNet(object):
 
 		#=====[ Step 4: Backward pass - loss and gradients	]=====
 		data_loss, dscores = self.euclidean_loss(scores, y)
-		da3, dW4, db4 = affine_backward(dscores, cache4)
-		da2, dW3, db3 = affine_relu_backward(da3, cache3)
+		da4, dW5, db5 = affine_backward(dscores, cache5)
+		da3, dW4, db4 = affine_relu_backward(da4, cache4)
+		da2, dW3, db3 = conv_relu_pool_backward(da3, cache3)
 		da1, dW2, db2 = conv_relu_pool_backward(da2, cache2)
 		dX, dW1, db1 = conv_relu_pool_backward(da1, cache1)
+
+
+		if compute_dX:
+			###########################################################################
+			# TODO: Return the gradient of the loss with respect to the input.        #
+			# HINT: This should be VERY simple!                                       #
+			###########################################################################
+			return dX
+			###########################################################################
+			#                         END OF YOUR CODE                                #  
+			###########################################################################
 
 
 		#=====[ Step 5: regularize gradients, get total loss	]=====
@@ -249,10 +346,11 @@ class EuclideanConvNet(object):
 					'W1': dW1, 'b1': db1, 
 					'W2': dW2, 'b2': db2, 
 					'W3': dW3, 'b3': db3,
-					'W4': dW4, 'b4': db4 
+					'W4': dW4, 'b4': db4,
+					'W5': dW5, 'b5': db5
 				}
 		reg_loss = 0.0
-		for p in ['W1', 'W2', 'W3', 'W4']:
+		for p in ['W1', 'W2', 'W3', 'W4', 'W5']:
 			W = model[p]
 			reg_loss += 0.5 * reg * np.sum(W * W)
 			grads[p] += reg * W
@@ -278,7 +376,7 @@ class EuclideanConvNet(object):
 		model, loss_hist, train_acc_hist, val_acc_hist = trainer.train(
 																		X_train, y_train, 
 																		X_val, y_val, 
-																		model, self.localization_convnet, 
+																		model, self.transfer_convnet, 
 																		dropout=dropout, reg=reg, 
 																		learning_rate=learning_rate, 
 																		batch_size=batch_size, num_epochs=num_epochs,
@@ -292,7 +390,7 @@ class EuclideanConvNet(object):
 
 	def predict(self, X):
 		"""X -> coordinates of cube"""
-		return self.localization_convnet(X, self.model)
+		return self.transfer_convnet(X, self.model)
 
 
 	def save(self, path):
