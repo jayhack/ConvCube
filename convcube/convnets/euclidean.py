@@ -351,6 +351,7 @@ class EuclideanConvNet(object):
 		dX, dW1, db1 = conv_relu_pool_backward(da1, cache1)
 
 
+
 		#=====[ Step 5: regularize gradients, get total loss	]=====
 		grads = { 
 					'W1': dW1, 'b1': db1, 

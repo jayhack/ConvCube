@@ -5,6 +5,8 @@ from cube import Cube
 from convcube.convnets import get_X_localization
 from convcube.convnets import get_X_pinpointing
 from convcube.convnets import EuclideanConvNet
+from convcube.cv.keypoints import array2tuples
+from convcube.cv.keypoints import denormalize_points
 from convcube.utils import draw_points
 
 class ConvNetCube(Cube):
@@ -30,17 +32,16 @@ class ConvNetCube(Cube):
 	################################################################################
 
 	def localize(self, image):
-		"""frame -> coordinates of cube as tuple"""
+		"""frame -> tl, br of bounding box around cube"""
 		X = get_X_localization(image)
 		y = self.loc_convnet.predict(X)[0]
 		y = y.reshape((2,2))
-		y[:,0] *= 640.0
-		y[:,1] *= 360.0
-		y = y.astype(np.uint16)
-
-		tl = (y[0,0], y[0,1])
-		br = (y[1,0], y[1,1]) #(x,y) tuples
-
+		y = array2tuples(y)
+		center = y[0]
+		scale_x = y[1][0]
+		scale_y = y[1][1]
+		tl = (center[0] - scale_x/2, center[1] - scale_y/2)
+		br = (center[0] + scale_x/2, center[1] + scale_y/2)
 		return tl, br
 
 
@@ -54,10 +55,9 @@ class ConvNetCube(Cube):
 
 		#=====[ Step 1: get localization	]=====
 		tl, br = self.localize(image)
-
+		tl, br = denormalize_points([tl, br], image)
 
 		#=====[ Step 2: scale coords	]=====
 		disp_img = image.copy()
 		cv2.rectangle(disp_img, tl, br, (0, 255, 0), thickness=2)
-		# disp_img = draw_points(image, coords, labels=[True])
 		return disp_img

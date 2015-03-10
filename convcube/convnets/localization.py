@@ -1,15 +1,19 @@
+import random
 import numpy as np
+import itertools
 from sklearn.cross_validation import train_test_split
 from convcube.cv.preprocess import resize
 from convcube.cv.preprocess import put_channels_first
 from convcube.cv.keypoints import kpts_to_image_crop
+from convcube.cv.keypoints import tuples2array
 from convcube.utils.wrangling import iter_labeled_frames
+from ModalDB import ModalClient, Video, Frame
 
 
 def localization_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
-	if not image.shape[:2] == (64, 64):
-		image = resize(image, (64, 64))
+	if not image.shape[:2] == (100, 100):
+		image = resize(image, (100, 100))
 	return image
 
 
@@ -24,8 +28,10 @@ def get_y_localization(box):
 		TODO: y_localization to portion across screen
 		TODO: change output to (center, size)
 	"""
-	y = np.array(box).reshape(1,4)
-	return y
+	points = tuples2array(box)
+	center = points.mean(axis=0)
+	scale = np.mean(abs(points - center)*2, axis=0)
+	return np.hstack([center, scale]).reshape(1, 4)
 
 
 def get_convnet_inputs_localization(frame):
@@ -37,10 +43,24 @@ def get_convnet_inputs_localization(frame):
 
 def load_dataset_localization(client, train_size=0.75):
 	"""returns dataset for localization: images -> X_train, X_val, y_train, y_val"""
-	X, y = [], []
-	for frame in iter_labeled_frames(client):
-		X_, y_ = get_convnet_inputs_localization(frame)
-		X.append(X_)
-		y.append(y_)
-	X, y = np.vstack(X), np.vstack(y)
-	return train_test_split(X, y, train_size=train_size)
+	Xs, ys = [], []
+	for video in client.iter(Video):
+		X_video, y_video = [], []
+		for frame in video.iter_children(Frame):
+			if not frame['bounding_box'] is None and len(frame['bounding_box']) == 2:
+				X, y = get_convnet_inputs_localization(frame)
+				X_video.append(X)
+				y_video.append(y)
+
+		Xs.append(X_video)
+		ys.append(y_video)
+
+	ix = range(len(Xs))
+	random.shuffle(ix)
+	split_ix = int(train_size*len(Xs))
+	X_train = np.vstack(itertools.chain(*Xs[:split_ix]))
+	y_train = np.vstack(itertools.chain(*ys[:split_ix]))
+	X_val = np.vstack(itertools.chain(*Xs[split_ix:]))
+	y_val = np.vstack(itertools.chain(*ys[split_ix:]))
+
+	return X_train, X_val, y_train, y_val
