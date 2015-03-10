@@ -57,7 +57,7 @@ class EuclideanConvNet(object):
 		self.pretrained_model = pretrained_model
 		self.model = model
 
-		assert num_filters_pre[0] == num_filters_loc[0]
+		# assert num_filters_pre[0] == num_filters_loc[0]
 		self.params = {
 						'shape_pre':shape_pre,
 						'shape_loc':shape_loc,
