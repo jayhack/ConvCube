@@ -45,7 +45,7 @@ class EuclideanConvNet(object):
 						shape_loc=(3, 46, 80),
 						classes_pre=100,
 						size_out=4,
-						filter_sizes_pre=(8, 5, 5),
+						filter_sizes_pre=(10, 5, 5),
 						filter_sizes_loc=(8, 5, 5),
 						num_filters_pre=(10,10,32),
 						num_filters_loc=(10,10,32),
@@ -100,18 +100,20 @@ class EuclideanConvNet(object):
 		model['b1'] = np.random.randn(F1)
 
 		#####[ CONV-RELU-POOL	]#####
+		#64 -> 63
 		model['W2'] = np.random.randn(F2, F1, filter_sizes[1], filter_sizes[1]) # Will reuse
 		model['b2'] = np.random.randn(F2)
 
+		#63 -> 62? 64?
 		######[ AFFINE-RELU FULLY CONNECTED	]#####
 		#TODO: what should that parameter be in the fully connected layer?
 		#goes from output of W2 to FC, so we need to find the shape of W2
-		model['W3'] = np.random.randn(FC, 1024)
+		model['W3'] = np.random.randn(F2*(64/(2*2))*(64/(2*2)), FC) #down to 16 from 64 due to 2x 2x2 pooling.
 		model['b3'] = np.random.randn(FC)
 
 		#####[ CONV-RELU-POOL	]#####
 		# model['W3'] = np.random.randn(H * W * F2 / 4, FC) #fully connected layer
-		model['W4'] = np.random.randn(num_classes, FC)
+		model['W4'] = np.random.randn(FC, num_classes)
 		model['b4'] = np.random.randn(num_classes)
 
 
@@ -133,6 +135,7 @@ class EuclideanConvNet(object):
 		W1, b1 = model['W1'], model['b1']
 		W2, b2 = model['W2'], model['b2']
 		W3, b3 = model['W3'], model['b3']
+		W4, b4 = model['W4'], model['b4']
 		conv_param_1 = {'stride': 1, 'pad': (W1.shape[2] - 1) / 2}
 		conv_param_2 = {'stride': 1, 'pad': (W2.shape[2] - 1) / 2}
 		pool_param = {'stride': 2, 'pool_height': 2, 'pool_width': 2}
