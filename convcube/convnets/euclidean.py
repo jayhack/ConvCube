@@ -5,7 +5,7 @@ from convcube.cs231n.classifiers.convnet import init_three_layer_convnet
 from convcube.cs231n.classifiers.convnet import three_layer_convnet
 from convcube.cs231n.classifiers.convnet import init_five_layer_convnet
 from convcube.cs231n.classifiers.convnet import five_layer_convnet
-from convcube.cs231n.classifier_trainer import ClassifierTrainer
+from convcube.cs231n.classifier_trainer import ClassifierTrainer as PretrainClassifierTrainer
 
 from convcube.cs231n.layers import *
 from convcube.cs231n.fast_layers import *
@@ -89,18 +89,18 @@ class EuclideanConvNet(object):
 		    Only the first three layers will get reused
 		"""
 		C, H, W = self.params['shape_pre']
-		F1, F2, F3, FC = self.params['num_filters_pre']
+		F1, F2, FC = self.params['num_filters_pre']
 		filter_sizes = self.params['filter_sizes_pre']
 		num_classes = self.params['classes_pre']
 		model = {}
 
 		#=====[ Step 1: Set weights from pretrained/std normal 	]=====
 		#####[ CONV-RELU-POOL	]#####
-		model['W1'] = np.random.randn(F1, 3, filter_sizes[0], filter_sizes[0])) #reused
+		model['W1'] = np.random.randn(F1, 3, filter_sizes[0], filter_sizes[0]) # Will reuse
 		model['b1'] = np.random.randn(F1)
 
 		#####[ CONV-RELU-POOL	]#####
-		model['W2'] = np.random.randn(F2, F1, filter_sizes[1], filter_sizes[1]) #reused
+		model['W2'] = np.random.randn(F2, F1, filter_sizes[1], filter_sizes[1]) # Will reuse
 		model['b2'] = np.random.randn(F2)
 
 		######[ AFFINE-RELU FULLY CONNECTED	]#####
@@ -127,7 +127,7 @@ class EuclideanConvNet(object):
 		return model
 
 
-	def pretrain_convnet(self):
+	def pretrain_convnet(self, X, model, y=None, reg=0.0, dropout=None):
 		"""runs the pretrain convnet"""
 		#=====[ Step 1: initialization	]=====
 		W1, b1 = model['W1'], model['b1']
@@ -172,22 +172,28 @@ class EuclideanConvNet(object):
 		return loss, grads
 
 
-	def pretrain(self, X_train, y_train, X_val, y_val, verbose=True):
+	def pretrain(self, 
+						X_train, y_train, X_val, y_val, verbose=True,
+						dropout=1.0, reg=0.05, learning_rate=0.0005, 
+		 				batch_size=50, num_epochs=5,
+						learning_rate_decay=0.95, update='rmsprop'
+					):
 		"""
 			trains pretrain convnet. 
 
 			returns model, loss_hist, train_acc_hist, val_acc_hist
 		"""
 		model = self.init_pretrain_convnet()
-		trainer = ClassifierTrainer()
+		trainer = PretrainClassifierTrainer()
 		result = trainer.train(
 		 						X_train, y_train, 
 		 						X_val, y_val, 
 		 						model, 
-	 							pretrain_convnet,
-		 						dropout=1.0, reg=0.05, learning_rate=0.0005, 
-		 						batch_size=50, num_epochs=5,
-								learning_rate_decay=0.95, update='rmsprop', verbose=verbose
+	 							self.pretrain_convnet,
+		 						dropout=dropout, reg=reg, learning_rate=learning_rate, 
+		 						batch_size=batch_size, num_epochs=num_epochs,
+								learning_rate_decay=learning_rate_decay, 
+								update=update, verbose=verbose
 								)
 		pretrained_model, loss_hist, train_acc_hist, val_acc_hist = result
 		self.pretrained_model = pretrained_model
