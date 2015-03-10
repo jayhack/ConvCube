@@ -23,13 +23,13 @@ import numpy as np
 import cv2
 from ModalDB import ModalClient, Video, Frame
 
-from schema import convcube_schema
-from preprocess import ResizeT
+from convcube.db import dbschema
+from convcube.cv.preprocess import resize
 
 if __name__ == '__main__':
 
 	#=====[ Step 1: boot up	and create convcube schema ]=====
-	client = ModalClient('./data/db', schema=convcube_schema)
+	client = ModalClient('./data/db', schema=dbschema)
 
 	#=====[ Step 2: turn on the webcam	]=====
 	cap = cv2.VideoCapture(0)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
 		#####[ GRAB IMAGE FROM WEBCAM	]#####
 		ret, image = cap.read()
-		image = ResizeT().transform(image)
+		image = resize(image)
 		cv2.imshow('DISPLAY', image)
 
 		#####[ INSERT INTO DB	]#####

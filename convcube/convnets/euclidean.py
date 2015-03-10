@@ -178,7 +178,7 @@ class EuclideanConvNet(object):
 	def pretrain(self, 
 						X_train, y_train, X_val, y_val, verbose=True,
 						dropout=1.0, reg=0.05, learning_rate=0.0005, 
-		 				batch_size=50, num_epochs=5,
+		 				batch_size=50, num_epochs=3,
 						learning_rate_decay=0.95, update='rmsprop'
 					):
 		"""
@@ -208,7 +208,7 @@ class EuclideanConvNet(object):
 	####################[ Localization ]############################################
 	################################################################################
 
-	def init_transfer_convnet(self, pretrained_model):
+	def init_transfer_convnet(self, pretrained_model=None):
 		"""
 		Initialize a three layer ConvNet with the following architecture:
 
@@ -235,27 +235,39 @@ class EuclideanConvNet(object):
 		"""
 		C, H, W = self.params['shape_loc']
 		F1, F2, F3, FC = self.params['num_filters_loc']
+		filter_sizes = self.params['filter_sizes_loc']
 		model = {}
 
 		#=====[ Step 1: Set weights from pretrained/std normal 	]=====
-		model['W1'] = pretrained_model['W1']	#copy pretrained model bottom conv layer
-		model['b1'] = pretrained_model['b1']
+		if pretrained_model:
+			model['W1'] = pretrained_model['W1']	#copy pretrained model bottom conv layer
+			model['b1'] = pretrained_model['b1']
 
-		model['W2'] = np.random.randn(F2, F1, 5, 5) # conv layer
-		model['b2'] = np.random.randn(F2)
+			model['W2'] = pretrained_model['W2']
+			model['b2'] = pretrained_model['b2']
+		else:
+			model['W1'] = np.random.randn(F1, 3, filter_sizes[0], filter_sizes[0]) # Will reuse
+			model['b1'] = np.random.randn(F1)
+
+			#####[ CONV-RELU-POOL	]#####
+			model['W2'] = np.random.randn(F2, F1, filter_sizes[1], filter_sizes[1]) # Will reuse
+			model['b2'] = np.random.randn(F2)
 
 		# model['W3'] = np.random.randn(H * W * F2 / 4, FC) #fully connected layer
-		model['W3'] = np.random.randn(F3, F2, 5, 5)
+		model['W3'] = np.random.randn(F3, F2, filter_sizes[2], filter_sizes[2])
 		model['b3'] = np.random.randn(F3)
 
-		model['W4'] = np.random.randn(1024, FC)
+		model['W4'] = np.random.randn(F3*(H/(2*2*2))*(W/(2*2*2)), FC)
 		model['b4'] = np.random.randn(FC)
 
 		model['W5'] = np.random.randn(FC, self.params['size_out'])
 		model['b5'] = np.random.randn(self.params['size_out'])
 
 		#=====[ Step 2: Scale weights	]=====
-		for i in [2, 3, 4, 5]:
+		regs = [2, 3, 4, 5]
+		if pretrained_model:
+			regs.insert(0, 1)
+		for i in regs:
 			model['W%d' % i] *= self.params['weight_scale']
 			model['b%d' % i] *= self.params['bias_scale']
 
@@ -339,17 +351,6 @@ class EuclideanConvNet(object):
 		dX, dW1, db1 = conv_relu_pool_backward(da1, cache1)
 
 
-		if compute_dX:
-			###########################################################################
-			# TODO: Return the gradient of the loss with respect to the input.        #
-			# HINT: This should be VERY simple!                                       #
-			###########################################################################
-			return dX
-			###########################################################################
-			#                         END OF YOUR CODE                                #  
-			###########################################################################
-
-
 		#=====[ Step 5: regularize gradients, get total loss	]=====
 		grads = { 
 					'W1': dW1, 'b1': db1, 
@@ -369,7 +370,7 @@ class EuclideanConvNet(object):
 
 
 
-	def train(self, X_train, y_train, X_val, y_val, 	
+	def train(self, X_train, y_train, X_val, y_val, pretrain=True,	
 													dropout=None, reg=0.0001, 
 													learning_rate=0.0007, 
 													batch_size=100, num_epochs=100,
@@ -381,7 +382,12 @@ class EuclideanConvNet(object):
 			returns model, loss_hist, train_acc_hist, val_acc_hist
 		"""
 		trainer = EuclideanConvNetTrainer()
-		model = self.init_transfer_convnet(self.pretrained_model)
+		
+		if pretrain:
+			model = self.init_transfer_convnet(self.pretrained_model)
+		else:
+			model = self.init_transfer_convnet()
+
 		model, loss_hist, train_acc_hist, val_acc_hist = trainer.train(
 																		X_train, y_train, 
 																		X_val, y_val, 

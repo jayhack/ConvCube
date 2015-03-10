@@ -23,7 +23,9 @@ import time
 import numpy as np
 import cv2
 from ModalDB import ModalClient, Video, Frame
-from convcube import dbschema
+from convcube.db import dbschema
+from convcube.cv.keypoints import normalize_points
+from convcube.cv.keypoints import denormalize_points
 
 
 class Labeler(object):
@@ -33,41 +35,32 @@ class Labeler(object):
 		self.window_name = 'DISPLAY'
 		cv2.namedWindow(self.window_name)
 		cv2.setMouseCallback(self.window_name, self.mouse_callback)
+		self.drawing = False
 
-
-	def normalize_coord(self, x, y):
-		"""image coordinates -> normalized (0 to 1, floats)"""
-		x, y = float(x), float(y)
-		H, W = float(self.image.shape[0]), float(self.image.shape[1])
-		return (x / W, y / H)
-
-
-	def unnormalize_coord(self, x, y):
-		"""normalized coords -> image coords"""
-		H, W = float(self.image.shape[0]), float(self.image.shape[1])
-		return int(x*W), int(y*H)
 
 
 	def mouse_callback(self, event, x, y, flags, param):
 		"""handles moust input"""
-		coord = self.normalize_coord(x, y)
+		coord = normalize_points([(x, y)], self.image)[0]
 
-		if event == cv2.EVENT_LBUTTONDOWN:
-			if self.box is None:
+		if not self.drawing:
+			if event == cv2.EVENT_LBUTTONDOWN:
 				self.box = [coord, coord]
-			else:
-				self.box[0] = coord
+				self.drawing = True
 
-		elif event == cv2.EVENT_LBUTTONUP:
-			if not self.box is None:
-				self.box[1] = coord
+		else:
+			self.box[1] = coord
+			
+			if event == cv2.EVENT_LBUTTONDOWN:
+				self.drawing = False
+
 
 
 	def draw_box(self, image, box):
 		"""draws the box"""
 		if not self.box is None:
-			tl = self.unnormalize_coord(box[0][0], box[0][1])
-			br = self.unnormalize_coord(box[1][0], box[1][1])
+			tl = denormalize_points([(box[0][0], box[0][1])], self.image)[0]
+			br = denormalize_points([(box[1][0], box[1][1])], self.image)[0]
 			disp_image = image.copy()
 			cv2.rectangle(disp_image, tl, br, (0, 255, 0), thickness=3)
 			return disp_image
@@ -79,6 +72,7 @@ class Labeler(object):
 		"""labels the image, returning box"""
 		self.image = image
 		self.box = None
+		self.drawing = False
 
 		while True:
 

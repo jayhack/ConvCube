@@ -113,7 +113,7 @@ if __name__ == '__main__':
 			box = frame['bounding_box']
 			box = denormalize_points(box, frame['image'])
 			image = crop_image(frame['image'].copy(), box)
-			image = imresize(image, 300)
+			image = imresize(image, 400)
 			points = labeler.label(image)
 
 			if not points is None:

@@ -8,8 +8,8 @@ from convcube.utils.wrangling import iter_labeled_frames
 
 def localization_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
-	if not image.shape[:2] == (46, 80):
-		image = resize(image, (46, 80))
+	if not image.shape[:2] == (64, 64):
+		image = resize(image, (64, 64))
 	return image
 
 
@@ -25,10 +25,6 @@ def get_y_localization(box):
 		TODO: change output to (center, size)
 	"""
 	y = np.array(box).reshape(1,4)
-	# tl, br = kpts_to_image_crop(aimage, kpts)
-	# tl = ((float(tl[0]) / 640.0), (float(tl[1]) / 360.0))
-	# br = ((float(br[0]) / 640.0), (float(br[1]) / 360.0))
-	# y = np.array([tl, br]).flatten()
 	return y
 
 
