@@ -19,7 +19,15 @@ def localization_resize(image):
 
 def get_X_localization(image):
 	"""image -> array for input to convnet"""
-	return put_channels_first(localization_resize(image))
+	image = localization_resize(image).astype(np.float32)
+
+	#=====[ Scale to -1, 1	]=====
+	image *= (2.0/255.0)
+	image -= 1.0
+
+	# mean_pixel = image.mean(axis=0).mean(axis=0)
+	# image = image - mean_pixel
+	return put_channels_first(image)
 
 
 def get_y_localization(box):
