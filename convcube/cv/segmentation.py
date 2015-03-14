@@ -1,18 +1,43 @@
 import numpy as np
 import cv2
+from sklearn.cluster import MiniBatchKMeans
 from skimage.segmentation import slic
 from skimage.segmentation import mark_boundaries
 from skimage.segmentation import find_boundaries
 from skimage.exposure import histogram
 
-def get_segs(image):
+
+def get_kmeans_image(image, n_clusters=10):
+    """image -> kmeans image"""
+    pix = image.reshape((image.shape[0]*image.shape[1], image.shape[2])).astype(np.float32)
+    km = MiniBatchKMeans(n_clusters=n_clusters, max_iter=10)
+    labels = km.fit_predict(pix)
+    labels_img = labels.reshape((image.shape[0], image.shape[1]))
+    km_img = np.zeros_like(image)
+    for i in range(n_clusters):
+        km_img[labels_img == i] = km.cluster_centers_[i,:]
+    return km_img
+
+
+def get_segs(image, n_segments=25):
     """image -> segs"""
-    return slic(image, n_segments=25, enforce_connectivity=True)
+    return slic(image, n_segments=n_segments, enforce_connectivity=True)
+
+
+def get_kmeans_segs(image, n_clusters=10, n_segments=25):
+    """image -> segs from kmeans image"""
+    km_img = get_kmeans_image(image, n_clusters=n_clusters)
+    segs = get_segs(image, n_segments=n_segments)
+    return segs
+
+
 
 
 ################################################################################
 ####################[ Simple Manipulations on Segs ]############################
 ################################################################################
+
+
 
 def get_covered_seg(segs, pt):
     """(segs, pt) -> segment point falls into"""
@@ -33,9 +58,9 @@ def get_seg_colors(image, segs, ix):
     pix = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[mask]
     h, s, v = pix[:, 0], pix[:, 1], pix[:, 2]
 
-    hist_h, bins = np.histogram(h, bins=10, range=(0, 255), density=True)
-    hist_s, bins = np.histogram(s, bins=10, range=(0, 255), density=True)
-    hist_v, bins = np.histogram(v, bins=10, range=(0, 255), density=True)
+    hist_h, bins = np.histogram(h, bins=10, range=(0, 255))
+    hist_s, bins = np.histogram(s, bins=10, range=(0, 255))
+    hist_v, bins = np.histogram(v, bins=10, range=(0, 255))
 
     return hist_h, hist_s, hist_v
 
@@ -49,8 +74,8 @@ def get_surrounding_colors(image, pt, size=2):
     h, s, v = pix[:, 0], pix[:, 1], pix[:, 2]
 
     hist_h, bins = np.histogram(h, bins=10, range=(0, 255))
-    hist_s, bins = np.histogram(s, bins=10, range=(0, 255), density=True)
-    hist_v, bins = np.histogram(v, bins=10, range=(0, 255), density=True)
+    hist_s, bins = np.histogram(s, bins=10, range=(0, 255))
+    hist_v, bins = np.histogram(v, bins=10, range=(0, 255))
 
     hist_h = hist_h.astype(np.float32) / hist_h.sum().astype(np.float32)
     hist_s = hist_s.astype(np.float32) / hist_s.sum().astype(np.float32)

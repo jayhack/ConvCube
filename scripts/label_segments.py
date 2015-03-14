@@ -105,7 +105,6 @@ if __name__ == '__main__':
 	print 'Video name: %s' % video_name
 	video = client.get(Video, video_name)
 
-
 	#=====[ Step 3: setup display	]=====
 	labeler = Labeler()
 	for frame in video.iter_children(Frame):
