@@ -32,9 +32,31 @@ def get_seg_colors(image, segs, ix):
     mask = (segs == ix)
     pix = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[mask]
     h, s, v = pix[:, 0], pix[:, 1], pix[:, 2]
-    hist, bins = np.histogram(h, bins=10, range=(0, 255))
-    return hist
 
+    hist_h, bins = np.histogram(h, bins=10, range=(0, 255), density=True)
+    hist_s, bins = np.histogram(s, bins=10, range=(0, 255), density=True)
+    hist_v, bins = np.histogram(v, bins=10, range=(0, 255), density=True)
+
+    return hist_h, hist_s, hist_v
+
+
+def get_surrounding_colors(image, pt, size=2):
+    """(image, pt) -> (hist_h, hist_s, hist_v) of HSV from region of size*2 around pt"""
+    x, y = int(pt[0]), int(pt[1])
+    region = image[y-size:y+size, x-size:x+size]
+    hsv = cv2.cvtColor(region, cv2.COLOR_BGR2HSV)
+    pix = hsv.reshape(hsv.shape[0] * hsv.shape[1], hsv.shape[2])
+    h, s, v = pix[:, 0], pix[:, 1], pix[:, 2]
+
+    hist_h, bins = np.histogram(h, bins=10, range=(0, 255))
+    hist_s, bins = np.histogram(s, bins=10, range=(0, 255), density=True)
+    hist_v, bins = np.histogram(v, bins=10, range=(0, 255), density=True)
+
+    hist_h = hist_h.astype(np.float32) / hist_h.sum().astype(np.float32)
+    hist_s = hist_s.astype(np.float32) / hist_s.sum().astype(np.float32)
+    hist_v = hist_v.astype(np.float32) / hist_v.sum().astype(np.float32)
+
+    return hist_h, hist_s, hist_v
 
 
 ################################################################################
