@@ -27,6 +27,7 @@ from skimage.segmentation import mark_boundaries
 from ModalDB import ModalClient, Video, Frame
 from convcube import dbschema
 from convcube.convnets.pinpointing import get_X_pinpointing
+from convcube.cv.preprocess import resize
 from convcube.cv.keypoints import denormalize_points
 from convcube.cv.keypoints import normalize_points
 from convcube.cv.cropping import crop_image
@@ -45,9 +46,10 @@ class Labeler(object):
 
 	def mouse_callback(self, event, x, y, flags, param):
 		"""handles moust input"""
+		coords = normalize_points([(x, y)], self.disp_img)
+		x, y = denormalize_points(coords, self.image)[0]
 
 		if event == cv2.EVENT_LBUTTONDOWN:
-			point = x, y
 			seg_ix = self.segs[y,x]
 			if seg_ix in self.pos:
 				self.pos.remove(seg_ix)
@@ -61,7 +63,7 @@ class Labeler(object):
 		for p in self.pos:
 			mask = self.segs == p
 			bounds_img[mask] = (0, 255, 0)
-		return bounds_img
+		return cv2.resize(bounds_img, (400,400))
 			
 
 	def label(self, image):
@@ -69,16 +71,27 @@ class Labeler(object):
 		self.image = image
 		self.segs = get_segments(image)
 		self.pos, self.neg = set([]), set([])
+		print self.segs.min(), self.segs.max()
 
 		while True:
 
-			disp_img = self.draw_segs()
-			cv2.imshow(self.window_name, disp_img)
+			self.disp_img = self.draw_segs()
+			cv2.imshow(self.window_name, self.disp_img)
 
 			#=====[ Step 5: wait for ESC to continue	]=====
 			key = cv2.waitKey(20)
 			if key & 0xFF == 27:
 				break
+
+		if len(self.pos) == 0:
+			return None
+
+		self.neg = set(range(self.segs.max() + 1)).difference(self.pos)
+		X = featurize_segments(self.image, self.segs)
+		y = np.zeros(X.shape[0])
+		y[list(self.pos)] = 1
+		return X, y
+
 
 
 
@@ -92,11 +105,6 @@ if __name__ == '__main__':
 	print 'Video name: %s' % video_name
 	video = client.get(Video, video_name)
 
-	#=====[ Step 3: Get color	]=====
-	color_name = raw_input('Color to mark: (wy, bg, or)')
-	assert color_name in ['wy', 'bg', 'or']
-	print 'Color name: %s' % color_name
-
 
 	#=====[ Step 3: setup display	]=====
 	labeler = Labeler()
@@ -104,11 +112,16 @@ if __name__ == '__main__':
 		if not frame['bounding_box'] is None:
 
 			#=====[ Get and store data	]=====
-			X = get_X_pinpointing(frame)
+			X = get_X_pinpointing(frame['image'], frame['bounding_box'])[0,:,:,:]
 			if X.max() <= 1.0:
 				X *= (255.0/2.0)
 				X += 255.0/2.0
+
 			image = X.transpose(1, 2, 0)
-			pos, neg = labeler.label(image)
+			out = labeler.label(image)
+			if not out is None:
+				(X, y) = out
+				frame['segment_features'] = (X,y)
+
 
 

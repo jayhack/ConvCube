@@ -62,7 +62,13 @@ dbschema = {
 						'filename':'center_points.pkl',
 						'load_func': lambda p: pickle.load(open(p)),
 						'save_func': lambda x, p: pickle.dump(x,open(p, 'w'))
-						}
+						},
+		'segment_features':{
+				'mode':'disk',
+				'filename':'segment_features.pkl',
+				'load_func': lambda p: pickle.load(open(p)),
+				'save_func': lambda x, p: pickle.dump(x,open(p, 'w'))
+				}
 	},
 
 	Video: {

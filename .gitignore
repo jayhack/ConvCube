@@ -6,6 +6,9 @@
 
 #=====[ Data ]=====
 data/db/*
+models/localization/*
+models/pinpointing/*
+models/vanilla/*
 
 #=====[ cs231n ]=====
 convcube/cs231n/build

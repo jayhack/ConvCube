@@ -11,6 +11,7 @@ from convcube.cs231n.layers import *
 from convcube.cs231n.fast_layers import *
 from convcube.cs231n.layer_utils import *
 from euclidean_trainer import EuclideanConvNetTrainer
+from nets import init_six_layer_net, six_layer_net
 
 
 class EuclideanConvNet(object):
@@ -387,12 +388,21 @@ class EuclideanConvNet(object):
 		if pretrain:
 			model = self.init_transfer_convnet(self.pretrained_model)
 		else:
-			model = self.init_transfer_convnet()
+			# model = init_six_layer_net(
+			model = self.init_transfer_convnet(
+										# input_shape=self.params['shape_loc'],
+										# num_filters=self.params['num_filters_loc'],
+										# filter_sizes=self.params['filter_sizes_loc'],
+										# size_out=self.params['size_out']
+										)
+
 
 		model, loss_hist, train_acc_hist, val_acc_hist = trainer.train(
 																		X_train, y_train, 
 																		X_val, y_val, 
-																		model, self.transfer_convnet, 
+																		model, 
+																		# six_layer_net, 
+																		self.transfer_convnet,
 																		dropout=dropout, reg=reg, 
 																		learning_rate=learning_rate, 
 																		batch_size=batch_size, num_epochs=num_epochs,

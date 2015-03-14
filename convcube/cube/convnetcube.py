@@ -45,10 +45,17 @@ class ConvNetCube(Cube):
 		return tl, br
 
 
-
 	################################################################################
 	####################[ Online ]##################################################
 	################################################################################
+
+	def draw_localization(self, image, tl, br):
+		"""(image, tl, br) -> output"""
+		disp_img = image.copy()
+		tl, br = denormalize_points([tl, br], image)
+		cv2.rectangle(disp_img, tl, br, (0, 255, 0), thickness=2)
+		return disp_img
+
 
 	def draw_output(self, image):
 		"""frame -> disp_image with output drawn on it"""

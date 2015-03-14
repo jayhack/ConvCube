@@ -12,8 +12,8 @@ from ModalDB import ModalClient, Video, Frame
 
 def localization_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
-	if not image.shape[:2] == (64, 64):
-		image = resize(image, (64, 64))
+	if not image.shape[:2] == (80, 80):
+		image = resize(image, (80, 80))
 	return image
 
 
@@ -39,7 +39,10 @@ def get_y_localization(box):
 	"""
 	points = tuples2array(box)
 	center = points.mean(axis=0)
-	scale = np.mean(abs(points - center)*2, axis=0)
+	diffs = points - center
+	xmin, ymin = diffs.min(axis=0)
+	xmax, ymax = diffs.max(axis=0)
+	scale = np.array([xmax - xmin, ymax - ymin])
 	return np.hstack([center, scale]).reshape(1, 4)
 
 

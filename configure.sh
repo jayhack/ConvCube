@@ -1,0 +1,12 @@
+export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib
+export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:/opt/intel/mkl/lib
+export DYLD_LIBRARY_PATH=/opt/intel/composer_xe_2015/mkl/lib/:$DYLD_LIBRARY_PATH:/opt/intel/mkl/lib
+export MKLROOT=/opt/intel/composer_xe_2015.2.132
+export DYLD_LIBRARY_PATH=$MKLROOT/compiler/lib:$MKLROOT/mkl/lib 
+export LIBRARY_PATH=$MKLROOT/compiler/lib:$MKLROOT/mkl/lib 
+export NLSPATH=$MKLROOT/mkl/lib/locale/%l_%t/%N 
+export MANPATH=$MKLROOT/man/en_US:/usr/local/share/man:/usr/share/man:/opt/intel/man:/usr/texbin/man:$ 
+export INCLUDE=$MKLROOT/mkl/include 
+export CPATH=$MKLROOT/mkl/include:$MKLROOT/mkl/bin/intel64/mklvars_intel64.sh
+export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:/Users/jayhack/anaconda/lib:/usr/local/lib:/usr/lib
+export PYTHONPATH=$PYTHONPATH:/Users/jayhack/CS/CV/caffe/python

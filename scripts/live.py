@@ -38,41 +38,40 @@ if __name__ == '__main__':
 
 
 	loc_convnet = EuclideanConvNet()
-	loc_convnet.load('./models/localization/filter_555.nfilters_101010.acc_007.convnet')
+	loc_convnet.load('./models/localization/5layer.filter_3333.nfilters_16321632.acc_0035.convnet')
 	cube = ConvNetCube(loc_convnet=loc_convnet)
 
-	video = client.get(Video, 'lanthrop_2')
-	for frame in video.iter_children(Frame):
-		image = frame['image']
-		output = cube.draw_output(image)
-		cv2.imshow('DISPLAY', output)
-		key = cv2.waitKey(1)
-		while key & 0xFF != ord('q'):
-			key = cv2.waitKey(30)
-
-
-
-	# #=====[ Step 3: capture frames until ESC	]=====
-	# while True:
-
-	# 	#####[ GRAB IMAGE FROM WEBCAM	]#####
-	# 	ret, image = cap.read()
-	# 	image = imresize(image, (360, 640))
+	# video = client.get(Video, 'lanthrop_2')
+	# for frame in video.iter_children(Frame):
+	# 	image = frame['image']
 	# 	output = cube.draw_output(image)
-
 	# 	cv2.imshow('DISPLAY', output)
-
-
 	# 	key = cv2.waitKey(1)
 	# 	while key & 0xFF != ord('q'):
 	# 		key = cv2.waitKey(30)
 
+
+
+	#=====[ Step 3: capture frames until ESC	]=====
+	while True:
+
+		#####[ GRAB IMAGE FROM WEBCAM	]#####
+		ret, image = cap.read()
+		image = imresize(image, (360, 640))
+		output = cube.draw_output(image)
+
+		cv2.imshow('DISPLAY', output)
+
+		key = cv2.waitKey(1)
+		# while key & 0xFF != ord('q'):
+			# key = cv2.waitKey(30)
+
 		# while cv2.waitKey(1) & 0xFF != ord('q'):
 			# pass
 
-		#####[ BREAK ON ESCAPE	]#####
-		# if cv2.waitKey(1) & 0xFF == ord('q'):
-			# break
+		####[ BREAK ON ESCAPE	]#####
+		if cv2.waitKey(1) & 0xFF == ord('q'):
+			break
 
 	#=====[ Step 4: cleanup	]=====
 	cap.release()
