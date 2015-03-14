@@ -40,8 +40,8 @@ def get_border(image, ideal_ratio=1):
 
 def pinpointing_resize(image):
 	"""image -> (46,80,3) shaped-image (46 for even height). idempotent"""
-	if not image.shape[:2] == (64, 64):
-		image = resize(image, (64, 64))
+	if not image.shape[:2] == (100, 100):
+		image = resize(image, (100, 100))
 	return image
 
 

@@ -5,6 +5,9 @@ from skimage.segmentation import slic
 from skimage.segmentation import mark_boundaries
 from skimage.segmentation import find_boundaries
 from skimage.exposure import histogram
+from sklearn.cross_validation import train_test_split
+from ModalDB import ModalClient, Frame
+
 
 
 def get_kmeans_image(image, n_clusters=10):
@@ -21,7 +24,7 @@ def get_kmeans_image(image, n_clusters=10):
 
 def get_segs(image, n_segments=25):
     """image -> segs"""
-    return slic(image, n_segments=n_segments, enforce_connectivity=True)
+    return slic(image, n_segments=n_segments, enforce_connectivity=True, compactness=30)
 
 
 def get_kmeans_segs(image, n_clusters=10, n_segments=25):
@@ -91,32 +94,23 @@ def get_surrounding_colors(image, pt, size=2):
 def featurize_segs(image, segs):
     """(image, segs) -> list of features for each segment"""
     features = []
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     for i in range(segs.max() + 1):
-        mask = segs == i
-        masked = image[mask]
         
-        #=====[ Pixel Values ]=====
-        pix_avg = masked.mean(axis=0)
-        pix_std = masked.std(axis=0)
-        pix_max = masked.max(axis=0)
-        pix_min = masked.min(axis=0)
-        pix_range = pix_max - pix_min
+        #=====[ Pixel Hist ]=====
+        h_hist, s_hist, v_hist = get_seg_colors(image, segs, i)
 
         #=====[ Moments ]=====
-        Y, X = np.where(mask) 
-        ylen = Y.max() - Y.min()
-        xlen = X.max() - Y.max()
-        yavg, ystd = Y.mean(), Y.std()
-        xavg, xstd = X.mean(), X.std()
-        area = len(X)
+        mask = (segs == i).astype(np.uint8)
+        moments = cv2.moments(mask, binaryImage=True)
+        moments = moments.values()
         
         #=====[ Put together ]====
-        f = [ylen, xlen, yavg, ystd, xavg, xstd, area]
-        f += pix_avg.tolist()
-        f += pix_std.tolist()
-        f += pix_max.tolist()
-        f += pix_min.tolist()
-        f += pix_range.tolist()
+        f = []
+        f += moments
+        f += h_hist.tolist()
+        f += s_hist.tolist()
+        f += v_hist.tolist()
         features.append(f)
     
     return np.array(features)
@@ -130,12 +124,49 @@ def segs2centers(image, segs, clf, threshold=0.3):
     return centers
 
 
-def get_seg_centers(image, clf, threshold=0.3):
+def get_seg_centers(image, clf, threshold=0.3, topn=None):
     """(image, classifier) -> list of seg centers"""
-    segs = get_segs(image)
-    centers = segs2centers(image, segs, clf, threshold=threshold)
-    features = featurize_segs(image, segs)
-    labels = (clf.predict_proba(features)[:,1] >= threshold)
-    return [c for c, l in zip(centers, labels) if l]
+    segs = get_kmeans_segs(image)
+    X = featurize_segs(image, segs)
+    y_pred = clf.predict_proba(X)[:,1]
 
+    if topn is None:
+        centers = [get_seg_center(segs, i) for i in np.where(y_pred)[0]]
+
+    else:
+        sorted_ix = np.argsort(y_pred)[::-1]
+        centers = [get_seg_center(segs, sorted_ix[i]) for i in range(topn)]
+
+    return centers
+
+
+
+
+################################################################################
+####################[ ML on Segs ]##############################################
+################################################################################
+
+def load_dataset_segmentation(client, train_size=0.85):
+    """returns X_train, X_val, y_train, y_val for segmentation"""
+    X, y = [], []
+
+    for frame in client.iter(Frame):
+
+        if not frame['segments'] is None and type(frame['segments']) == dict:
+
+            image = frame['image']
+            segs = frame['segments']['segs']
+            pos = np.array(list(frame['segments']['pos'])).astype(np.uint8)
+            neg = np.array(list(frame['segments']['neg'])).astype(np.uint8)
+
+            X_ = featurize_segs(image, segs)
+            y_ = np.zeros((X_.shape[0],))
+            y_[pos] = 1
+
+            X.append(X_)
+            y.append(y_)
+
+    X = np.vstack(X)
+    y = np.concatenate(y)
+    return train_test_split(X, y, train_size=train_size)
 

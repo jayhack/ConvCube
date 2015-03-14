@@ -31,8 +31,8 @@ from convcube.cv.preprocess import resize
 from convcube.cv.keypoints import denormalize_points
 from convcube.cv.keypoints import normalize_points
 from convcube.cv.cropping import crop_image
-from convcube.cv.segmentation import get_segments
-from convcube.cv.segmentation import featurize_segments
+from convcube.cv.segmentation import get_kmeans_segs
+from convcube.cv.segmentation import featurize_segs
 
 
 class Labeler(object):
@@ -68,17 +68,20 @@ class Labeler(object):
 
 	def label(self, image):
 		"""labels the image, returning box"""
-		self.image = image
-		self.segs = get_segments(image)
+		#=====[ Step 1: get segments	]=====
+		self.image = image.astype(np.uint8)
+		self.segs = get_kmeans_segs(image, n_clusters=8)
+
+
 		self.pos, self.neg = set([]), set([])
 		print self.segs.min(), self.segs.max()
 
+		#=====[ Step 2: label segments	]=====
 		while True:
 
 			self.disp_img = self.draw_segs()
 			cv2.imshow(self.window_name, self.disp_img)
 
-			#=====[ Step 5: wait for ESC to continue	]=====
 			key = cv2.waitKey(20)
 			if key & 0xFF == 27:
 				break
@@ -87,10 +90,14 @@ class Labeler(object):
 			return None
 
 		self.neg = set(range(self.segs.max() + 1)).difference(self.pos)
-		X = featurize_segments(self.image, self.segs)
-		y = np.zeros(X.shape[0])
-		y[list(self.pos)] = 1
-		return X, y
+
+
+		#=====[ Step 3: save segments	]=====
+		segments = {}
+		segments['segs'] = self.segs
+		segments['pos'] = self.pos
+		segments['neg'] = self.neg
+		return segments
 
 
 
@@ -117,10 +124,9 @@ if __name__ == '__main__':
 				X += 255.0/2.0
 
 			image = X.transpose(1, 2, 0)
-			out = labeler.label(image)
-			if not out is None:
-				(X, y) = out
-				frame['segment_features'] = (X,y)
+			segments = labeler.label(image)
+			if not segments is None:
+				frame['segments'] = segments
 
 
 
