@@ -32,8 +32,15 @@ def tuples2ints(tuples):
 	return [(int(p[0]), int(p[1])) for p in tuples]
 
 
+def is_normalized(pts):
+	"""pts as tuples -> wether they are all normalized"""
+	return all([(0. <= p[0] <= 1.) and (0 <= p[1] <= 1.) for p in pts])
+
+
 def normalize_points(pts, image):
-	"""(pts as tuples, image) -> normalized points"""
+	"""(pts as tuples, image) -> normalized points. idempotent"""
+	if is_normalized(pts):
+		return pts
 	pts = tuples2array(pts).astype(np.float32)
 	H, W = image.shape[0], image.shape[1]
 	pts[:,0] /= float(W)
@@ -42,7 +49,9 @@ def normalize_points(pts, image):
 
 
 def denormalize_points(pts, image):
-	"""(pts as tuples, image) -> denormalized points"""
+	"""(pts as tuples, image) -> denormalized points. idempotent."""
+	if not is_normalized(pts):
+		return pts
 	pts = tuples2array(pts).astype(np.float32)
 	H, W = image.shape[0], image.shape[1]
 	pts[:,0] *= float(W)

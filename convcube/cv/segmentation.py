@@ -12,7 +12,7 @@ def get_segs(image):
 ####################[ Simple Manipulations on Segs ]############################
 ################################################################################
 
-def get_covered_segment(segs, pt):
+def get_covered_seg(segs, pt):
     """(segs, pt) -> segment point falls into"""
     x, y = int(pt[0]), int(pt[1])
     assert y <= segs.shape[0] and x <= segs.shape[1]
