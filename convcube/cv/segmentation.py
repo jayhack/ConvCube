@@ -1,7 +1,9 @@
 import numpy as np
+import cv2
 from skimage.segmentation import slic
 from skimage.segmentation import mark_boundaries
 from skimage.segmentation import find_boundaries
+from skimage.exposure import histogram
 
 def get_segs(image):
     """image -> segs"""
@@ -21,9 +23,17 @@ def get_covered_seg(segs, pt):
 
 def get_seg_center(segs, ix):
     """(segs, segment index) -> segment center"""
-    ys, xs = np.where(segs == i)
+    ys, xs = np.where(segs == ix)
     return int(xs.mean()), int(ys.mean())
 
+
+def get_seg_colors(image, segs, ix):
+    """(image, segs, segment index) -> hist over h from HSV of segment"""
+    mask = (segs == ix)
+    pix = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[mask]
+    h, s, v = pix[:, 0], pix[:, 1], pix[:, 2]
+    hist, bins = np.histogram(h, bins=10, range=(0, 255))
+    return hist
 
 
 
