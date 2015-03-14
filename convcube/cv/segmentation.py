@@ -3,12 +3,33 @@ from skimage.segmentation import slic
 from skimage.segmentation import mark_boundaries
 from skimage.segmentation import find_boundaries
 
-
 def get_segs(image):
     """image -> segs"""
     return slic(image, n_segments=25, enforce_connectivity=True)
 
 
+################################################################################
+####################[ Simple Manipulations on Segs ]############################
+################################################################################
+
+def get_covered_segment(segs, pt):
+    """(segs, pt) -> segment point falls into"""
+    x, y = int(pt[0]), int(pt[1])
+    assert y <= segs.shape[0] and x <= segs.shape[1]
+    return segs[y, x]
+
+
+def get_seg_center(segs, ix):
+    """(segs, segment index) -> segment center"""
+    ys, xs = np.where(segs == i)
+    return int(xs.mean()), int(ys.mean())
+
+
+
+
+################################################################################
+####################[ ML on Segs ]##############################################
+################################################################################
 
 def featurize_segs(image, segs):
     """(image, segs) -> list of features for each segment"""
@@ -45,14 +66,10 @@ def featurize_segs(image, segs):
 
 
 def segs2centers(image, segs, clf, threshold=0.3):
-    """(segs, classifier) -> list of centers"""
+    """(segs, classifier) -> list of centers of cube faces"""
     X = featurize_segs(image, segs)
     y = clf.predict_proba(X)[:,1] > threshold
-    centers = []
-    for i in np.where(y)[0]:
-        ys, xs = np.where(segs == i)
-        y, x = (int(ys.mean()), int(xs.mean()))
-        centers.append((x, y))
+    centers = [get_seg_center(segs, i) for i in np.where(y)[0]]
     return centers
 
 

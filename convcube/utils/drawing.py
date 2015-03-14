@@ -1,5 +1,17 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import cv2
+
+def show_images(images, n=4):
+    """displays n images in a row via matplotlib
+    """
+    plt.rcParams['figure.figsize'] = 20, 50
+    fig, axes = plt.subplots(nrows=1, ncols=min(n, 4))
+    for i, img in enumerate(images[:n]):
+        axes[i].imshow(img, cmap=plt.cm.gray)
+        axes[i].set_xticks([])
+        axes[i].set_yticks([])
+
 
 def draw_points(frame, points, labels=None):
 	"""
